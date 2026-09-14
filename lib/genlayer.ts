@@ -7,8 +7,6 @@ export const studioDevConfig = {
   rpc: "https://studio-dev.genlayer.com/api",
 } as const;
 
-// Public Studio-dev address. Environment configuration can override this after an upgrade.
-export const deployedSemanticConsensusAddress = "0xB235f4e22f6b3B3772a6C4711B14C2ee7EcF9504" as const;
 
 export interface Eip1193Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;

@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { connectStudioDev, deployedSemanticConsensusAddress, submitConsensus } from "../lib/genlayer";
+import { connectStudioDev, submitConsensus } from "../lib/genlayer";
 
 type Stage = "conflict" | "ready";
 const fields = [
@@ -35,7 +35,8 @@ export default function Home() {
     }
   };
   const evaluateOnGenLayer = async () => {
-    const address = (process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS ?? deployedSemanticConsensusAddress) as `0x${string}`;
+    const address = process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS as `0x${string}` | undefined;
+    if (!address) { setNotice("Studio Next contract address is not configured yet."); return; }
     const provider = (window as unknown as { ethereum?: { request(args: { method: string; params?: unknown[] }): Promise<unknown> } }).ethereum;
     if (!provider) { setNotice("Connect a Studio-dev wallet first."); return; }
     try {
