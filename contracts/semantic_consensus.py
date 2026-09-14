@@ -4,36 +4,20 @@ import genlayer as gl
 
 
 class SemanticConsensus(gl.contract.Contract):
-    last_agreement_id: str
-    last_outcome: str
+    outcome: str
 
     def __init__(self):
-        self.last_agreement_id = ""
-        self.last_outcome = "UNRESOLVED"
+        self.outcome = "UNRESOLVED"
 
     @gl.public.write
     def evaluate(self, agreement_id: str, party_a: str, party_b: str, question: str) -> str:
-        def source() -> str:
-            return (
-                "Agreement ID: " + agreement_id + "\n"
-                "Party A interpretation:\n" + party_a + "\n"
-                "Party B interpretation:\n" + party_b + "\n"
-                "Question: " + question
-            )
-
-        result = gl.eq_principle.prompt_non_comparative(
-            source,
-            task="Classify the interpretations as EQUIVALENT, MATERIAL_CONFLICT, or UNRESOLVED.",
-            criteria="EQUIVALENT requires materially matching scope, deadline, evidence, quantities, conditions, and exceptions. Any meaningful mismatch is MATERIAL_CONFLICT. Insufficiently clear meaning is UNRESOLVED.",
+        self.outcome = gl.eq_principle.prompt_non_comparative(
+            lambda: party_a + "\n" + party_b + "\n" + question,
+            task="Return EQUIVALENT, MATERIAL_CONFLICT, or UNRESOLVED.",
+            criteria="Compare material obligations.",
         )
-        if result not in ["EQUIVALENT", "MATERIAL_CONFLICT", "UNRESOLVED"]:
-            raise gl.vm.UserError("invalid consensus outcome")
-        self.last_agreement_id = agreement_id
-        self.last_outcome = result
-        return result
+        return self.outcome
 
     @gl.public.view
     def get_outcome(self, agreement_id: str) -> str:
-        if agreement_id != self.last_agreement_id:
-            return "UNRESOLVED"
-        return self.last_outcome
+        return self.outcome
