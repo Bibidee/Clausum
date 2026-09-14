@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "network": "studio_devnet",
+  "generatedBy": "placeholder until gltest measurement",
+  "deploy": {
+    "leaderTimeunitsAllocation": "125",
+    "validatorTimeunitsAllocation": "250",
+    "executionBudgetPerRound": "0",
+    "totalMessageFees": "0",
+    "rotationsPerRound": "1"
+  },
+  "methods": {
+    "evaluate": {
+      "leaderTimeunitsAllocation": "125",
+      "validatorTimeunitsAllocation": "250",
+      "executionBudgetPerRound": "0",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "1"
+    }
+  }
+}

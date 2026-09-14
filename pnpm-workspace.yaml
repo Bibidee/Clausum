@@ -1,5 +1,10 @@
 allowBuilds:
+  cpu-features: true
   esbuild: true
+  genlayer: true
+  keytar: true
+  protobufjs: true
   sharp: true
+  ssh2: true
   unrs-resolver: true
   workerd: true
