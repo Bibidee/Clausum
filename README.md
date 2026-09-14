@@ -27,16 +27,28 @@ The project pins the Studio Next RC JavaScript SDK at `genlayer-js@2.0.0-rc.1` a
 - Chain ID: `61997`
 - RPC: `https://studio-dev.genlayer.com/api`
 - Deployed contract: `0xc363c709592BA8782eB5472153cAf4CeDEcBC084`
-- Source: [contracts/semantic_consensus.py](contracts/semantic_consensus.py) and [contracts/semantic_consensus_v2.py](contracts/semantic_consensus_v2.py)
+- Active source for the next deployment: [contracts/semantic_consensus.py](contracts/semantic_consensus.py)
 
 ### Verified Studio Next evidence
 
 The v2 instance was deployed and finalized on Studio-dev. Its deployment transaction is
 [`0xe5cf6b99…d4d515c0`](https://explorer-studio-next.genlayer.com/tx/0xe5cf6b99d93bc1c0168f72d6bcab7948e13d644fc21b71d2b97e7a292a085fb1).
 
-An independent semantic-consensus write for `studio-next-equivalent-001` finalized, and the
+The prior v2 instance recorded an independent semantic-consensus write for `studio-next-equivalent-001`, and the
 on-chain `get_outcome` read returned `EQUIVALENT`. The v2 contract stores outcomes by agreement
 identifier, so later agreement checks do not overwrite earlier results.
+
+## Formation invariant and current deployment status
+
+Formation is calculated only when all of these are true: the latest GenLayer verdict is
+`EQUIVALENT`, deterministic conflicts are zero, the verdict input hash matches the active
+interpretations, and Party A and Party B have demo-ratified the same canonical SHA-256 hash.
+Changing interpretations invalidates the previous verdict and both ratifications.
+
+The hardened `TreeMap` contract source has a changed ABI and must be deployed as a fresh Studio-dev
+instance. Until that deployment evidence is recorded, the address above remains historical evidence,
+not the address claimed by the hardened UI. Browser-local persistence and demo ratification are
+explicitly hackathon-only; wallet signatures and durable receipt storage remain post-hackathon work.
 
 Do not substitute stable Studionet 61999. Studio-dev is resettable and is intended for RC validation.
 

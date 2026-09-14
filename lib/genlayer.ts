@@ -14,6 +14,7 @@ export interface Eip1193Provider {
 
 export interface ConsensusSubmission {
   agreementId: string;
+  inputHash: string;
   buyerInterpretation: string;
   sellerInterpretation: string;
   question: string;
@@ -43,7 +44,7 @@ export async function submitConsensus(
   input: ConsensusSubmission,
 ): Promise<ConsensusReceipt> {
   const { client } = await connectStudioDev(provider);
-  const write = { address: contractAddress, functionName: "evaluate", args: [input.agreementId, input.buyerInterpretation, input.sellerInterpretation, input.question] };
+  const write = { address: contractAddress, functionName: "evaluate", args: [input.agreementId, input.inputHash, input.buyerInterpretation, input.sellerInterpretation, input.question] };
   const estimate = await client.estimateTransactionFeesForWrite(write);
   const transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
   const receipt = await client.waitForFinalization({
@@ -53,7 +54,7 @@ export async function submitConsensus(
   const outcome = await client.readContract({
     address: contractAddress,
     functionName: "get_outcome",
-    args: [input.agreementId],
+    args: [input.agreementId, input.inputHash],
   });
   if (!isSemanticOutcome(outcome)) throw new Error("GenLayer returned an invalid semantic outcome");
   return { transactionHash, outcome, finalized: true, executionSucceeded: true };
