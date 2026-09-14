@@ -26,7 +26,17 @@ The project pins the Studio Next RC JavaScript SDK at `genlayer-js@2.0.0-rc.1` a
 - Network: `studio-dev`
 - Chain ID: `61997`
 - RPC: `https://studio-dev.genlayer.com/api`
-- Contract: [contracts/semantic_consensus.py](contracts/semantic_consensus.py)
+- Deployed contract: `0xc363c709592BA8782eB5472153cAf4CeDEcBC084`
+- Source: [contracts/semantic_consensus.py](contracts/semantic_consensus.py) and [contracts/semantic_consensus_v2.py](contracts/semantic_consensus_v2.py)
+
+### Verified Studio Next evidence
+
+The v2 instance was deployed and finalized on Studio-dev. Its deployment transaction is
+[`0xe5cf6b99…d4d515c0`](https://explorer-studio-next.genlayer.com/tx/0xe5cf6b99d93bc1c0168f72d6bcab7948e13d644fc21b71d2b97e7a292a085fb1).
+
+An independent semantic-consensus write for `studio-next-equivalent-001` finalized, and the
+on-chain `get_outcome` read returned `EQUIVALENT`. The v2 contract stores outcomes by agreement
+identifier, so later agreement checks do not overwrite earlier results.
 
 Do not substitute stable Studionet 61999. Studio-dev is resettable and is intended for RC validation.
 
@@ -73,6 +83,8 @@ See [DEMO.md](DEMO.md) for the judge-facing script.
 ## Hackathon pitch
 
 **One-line pitch:** CLAUSUM proves two autonomous parties mean the same thing before they commit value.
+
+**Live demo:** [clausum-formation.ojikutusarat.chatgpt.site](https://clausum-formation.ojikutusarat.chatgpt.site)
 
 **Problem:** matching text and signatures do not guarantee matching obligations when agents reason independently.
 
