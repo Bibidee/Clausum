@@ -33,7 +33,7 @@ function isSemanticOutcome(value: unknown): value is SemanticOutcome {
 export async function connectStudioDev(provider: Eip1193Provider) {
   const accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
   const client = createClient({ chain: studioDevnet, account: accounts[0] as `0x${string}`, provider });
-  await client.connect("studio-dev");
+  await client.connect();
   return { client, account: accounts[0] as `0x${string}` };
 }
 
@@ -46,7 +46,9 @@ export async function submitConsensus(
   const write = { address: contractAddress, functionName: "evaluate", args: [input.agreementId, input.buyerInterpretation, input.sellerInterpretation, input.question] };
   const estimate = await client.estimateTransactionFeesForWrite(write);
   const transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
-  const receipt = await client.waitForFinalization({ hash: transactionHash });
+  const receipt = await client.waitForFinalization({
+    hash: transactionHash as `0x${string}` & { length: 66 },
+  });
   if (!isSuccessful(receipt)) throw new Error(`GenLayer write failed: ${receipt.statusName} / ${receipt.txExecutionResultName}`);
   const outcome = await client.readContract({
     address: contractAddress,
