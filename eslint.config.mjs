@@ -11,6 +11,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    ".genlayer-python/**",
+    ".pnpm-store/**",
     "next-env.d.ts",
   ]),
   {

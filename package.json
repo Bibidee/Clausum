@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "test:domain": "tsx --test tests/formation.test.ts",
     "genlayer:network": "genlayer network set studio-dev && genlayer network info",
-    "genlayer:lint": "genvm-lint check contracts/semantic_consensus.py --json && genvm-lint validate contracts/semantic_consensus.py && genvm-lint typecheck contracts/semantic_consensus.py",
+    "genlayer:lint": "node scripts/genlayer-lint.mjs",
     "genlayer:deploy": "genlayer deploy --contract contracts/semantic_consensus.py"
   },
   "dependencies": {
