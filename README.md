@@ -12,6 +12,7 @@ CLAUSUM is a semantic formation layer for autonomous agreements. It establishes 
 - Canonical deterministic serialization and SHA-256 hashing.
 - Hash-bound two-party ratification and a Formation Receipt.
 - Browser-local demo persistence and a Studio-dev wallet integration seam.
+- A routed Semantic Aurora frontend with dedicated workspace, consensus, ratification, and receipt views.
 
 ## Architecture
 
@@ -51,6 +52,10 @@ The previous `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA87
 Browser-local persistence and demo ratification are explicitly hackathon-only; wallet signatures and durable
 receipt storage remain post-hackathon work. The local app’s browser wallet seam requires an injected provider;
 Studio Next’s wallet is origin-scoped, so localhost wallet E2E remains a verification follow-up.
+
+The current production frontend is live at [clausum.vercel.app](https://clausum.vercel.app) with routes for
+`/workspace`, `/consensus`, `/ratification`, and `/receipt`. It preserves the formation provider across route
+changes and renders the Formation Receipt from runtime values only after matching ratification.
 
 Do not substitute stable Studionet 61999. Studio-dev is resettable and is intended for RC validation.
 

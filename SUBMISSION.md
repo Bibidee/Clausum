@@ -13,8 +13,9 @@ equivalent.
 - Deployment transaction: `0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df` (finalized).
 - Live `MATERIAL_CONFLICT` readback passed for derived input `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b` via finalized transaction `0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd`.
 - Live `EQUIVALENT` readback passed for derived input `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821` via finalized transaction `0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768`.
-- Vercel Production is connected to `Bibidee/Clausum`, tracks `main`, and serves the hardened frontend at
-  `https://clausum.vercel.app` from deployment `B5AxHakNPMyWeyUWQ32rmNom7Qaz` (commit `c70c0a0`).
+- Vercel Production is connected to `Bibidee/Clausum`, tracks `main`, and serves the Semantic Aurora
+  multi-page frontend at `https://clausum.vercel.app` from deployment `8r2yrAyuua1o6oQP3T63VMc2nzpW`
+  (commit `9d1642f`).
 - Production configuration includes the fresh contract address, Studio-dev RPC (`https://studio-dev.genlayer.com/api`),
   chain `61997`, and `NEXT_PUBLIC_CLAUSUM_MODE=demo`.
 
@@ -29,9 +30,9 @@ readbacks are complete. The two live Studio transactions finalized successfully 
 Ratification is a browser-local demo interaction, not a cryptographic signature. Receipts are local
 to the active browser session. These boundaries are deliberately visible in the product and README.
 
-- Final readiness: NOT READY (live contract lifecycle is complete; localhost wallet E2E remains blocked by origin-scoped provider injection)
-- Final source HEAD: `c70c0a08f03007aa31bfa62d5839bc778ac41390`
-- Contract SHA-256 (GitHub LF blob): `03935B564FAEFB404FD1426B1EB1648ABA3C6DE6561829D575C1793F639EDD16`
+- Final readiness: NOT READY (frontend and live contract evidence are complete; wallet E2E remains blocked by origin-scoped provider injection)
+- Frontend reconstruction commit: `9d1642fece19d592d66f391e3457a65f7ac76207`
+- Contract SHA-256 (final source): `667B39596F98EBB4FFCB01426F3F5B5F9A1866518BC32E8C2AC43F8857158872`
 - Domain tests: PASS (8/8)
 - TypeScript: PASS
 - Lint: PASS
