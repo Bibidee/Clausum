@@ -57,7 +57,7 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 .button.ghost, .button.subtle { background: #ffffff08; color: var(--text); border: 1px solid var(--line); }
 .button.subtle { color: var(--muted); }
 .hero-visual { min-height: 500px; position: relative; display: flex; flex-direction: column; justify-content: center; }
-.visual-caption { display: flex; flex-direction: column; gap: 8px; margin-top: -8px; text-align: center; }
+.visual-caption { display: flex; flex-direction: column; gap: 8px; margin-top: 34px; text-align: center; }
 .visual-caption span { color: var(--cyan); letter-spacing: .22em; font-size: 10px; }
 .visual-caption small { color: var(--muted); max-width: 320px; align-self: center; line-height: 1.5; }
 .convergence-rail { min-height: 180px; position: relative; display: grid; place-items: center; overflow: hidden; }
