@@ -22,7 +22,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased"><AppShell>{children}</AppShell></body>
+      <body className="antialiased">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => { try { const saved = localStorage.getItem("clausum-theme"); const theme = saved === "light" || saved === "dark" ? saved : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); document.documentElement.dataset.theme = theme; } catch (_) {} })();`,
+          }}
+        />
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }
