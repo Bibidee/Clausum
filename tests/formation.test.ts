@@ -37,3 +37,10 @@ test("unresolved and conflict verdicts block matching ratifications", () => {
   assert.equal(canForm("MATERIAL_CONFLICT", [], "same", "same", "input", "input"), false);
   assert.equal(canForm("EQUIVALENT", ["quantity"], "same", "same", "input", "input"), false);
 });
+
+test("each party must independently ratify the current canonical hash", () => {
+  assert.equal(canForm("EQUIVALENT", [], "canonical", "", "input", "input"), false);
+  assert.equal(canForm("EQUIVALENT", [], "", "canonical", "input", "input"), false);
+  assert.equal(canForm("EQUIVALENT", [], "old", "canonical", "input", "input"), false);
+  assert.equal(canForm("EQUIVALENT", [], "canonical", "canonical", "input", "input"), true);
+});
