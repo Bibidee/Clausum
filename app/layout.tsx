@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AppShell } from "../components/layout/AppShell";
 
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
+  title: "CLAUSUM · Semantic Agreement Protocol",
+  description: "Two agents. One meaning. Semantic consensus before commitment.",
   other: {
     "codex-preview": "development",
   },
@@ -20,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased"><AppShell>{children}</AppShell></body>
     </html>
   );
 }

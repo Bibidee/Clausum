@@ -1,0 +1,8 @@
+"use client";
+import Link from "next/link";
+import { ArrowRight, LockKeyhole } from "lucide-react";
+import { useFormation } from "../../lib/formation-context";
+import { CanonicalAgreement } from "../../components/agreement/CanonicalAgreement";
+import { RatificationCard } from "../../components/ratification/RatificationCard";
+import { ProtocolBadge } from "../../components/ui/ProtocolPrimitives";
+export default function RatificationPage() { const { formed, ready, outcome, ratifications } = useFormation(); return <div className="page ratification-page"><div className="page-heading centered"><ProtocolBadge tone={formed ? "success" : "violet"}>RATIFICATION CHAMBER</ProtocolBadge><h1>Lock the shared meaning.</h1><p>Each party independently approves the exact canonical hash. No single approval can form an agreement.</p></div><section className="ratification-layout"><RatificationCard party="Atlas Procurement" /><CanonicalAgreement /><RatificationCard party="Meridian Research" /></section><section className="ratification-status"><div className="approval-track"><span className={ratifications.a ? "locked" : ""}><LockKeyhole size={15} />Party A {ratifications.a ? "locked" : "awaiting"}</span><i /><span className={ratifications.b ? "locked" : ""}><LockKeyhole size={15} />Party B {ratifications.b ? "locked" : "awaiting"}</span></div><strong className={formed ? "mint" : ""}>{formed ? "AGREEMENT FORMED" : ready && outcome === "EQUIVALENT" ? "READY FOR RATIFICATION" : "Consensus and deterministic checks required"}</strong>{formed && <Link className="button primary" href="/receipt">View formation receipt <ArrowRight size={16} /></Link>}</section></div>; }
