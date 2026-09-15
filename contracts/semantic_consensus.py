@@ -1,13 +1,11 @@
 # v0.3.0
 # { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }
 import genlayer as gl
-from genlayer import TreeMap
+from genlayer import *
 
 
 class SemanticConsensus(gl.contract.Contract):
     outcomes: TreeMap[str, str]
-    input_hashes: TreeMap[str, str]
-    latest_keys: TreeMap[str, str]
 
     def __init__(self):
         pass
@@ -29,8 +27,6 @@ class SemanticConsensus(gl.contract.Contract):
         if result not in ["EQUIVALENT", "MATERIAL_CONFLICT", "UNRESOLVED"]:
             raise gl.vm.UserError("invalid consensus outcome")
         self.outcomes[evaluation_key] = result
-        self.input_hashes[evaluation_key] = input_hash
-        self.latest_keys[agreement_id] = evaluation_key
         return result
 
     @gl.public.view

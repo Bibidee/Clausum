@@ -51,6 +51,7 @@ export async function evaluationInputHash(value: { agreementId: string; partyA: 
 
 export function deterministicConflicts(a: ObligationModel, b: ObligationModel): string[] {
   const conflicts: string[] = [];
+  if (a.scope !== b.scope) conflicts.push("scope");
   if (a.quantity !== b.quantity) conflicts.push("quantity");
   if (a.deadline !== b.deadline) conflicts.push("deadline");
   if (a.evidence !== b.evidence) conflicts.push("evidence");
