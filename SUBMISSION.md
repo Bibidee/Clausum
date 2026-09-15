@@ -27,6 +27,8 @@ to the active browser session. These boundaries are deliberately visible in the 
 
 ## Verification snapshot
 
+- Final readiness: NOT READY (live Studio contract evidence is complete; app wallet E2E is still blocked by origin-scoped provider injection)
+- Final Git HEAD: `2a865086d60dcb5f0e60d1a73bc44b47b44bf019`
 - Contract SHA-256: `C96FD945562432745E5055AC1F9335284FDB009E36763BEEC5C99D0DD3121744`
 - Domain tests: PASS (6/6)
 - TypeScript: PASS
