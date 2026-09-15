@@ -1,0 +1,3 @@
+import { useFormation } from "../../lib/formation-context";
+const steps = ["Negotiated", "Interpreted", "Compared", "Judged", "Amended", "Ratified", "Formed"];
+export function FormationTimeline() { const { stage, outcome, formed, ratifications } = useFormation(); const active = formed ? 6 : ratifications.a && ratifications.b ? 5 : outcome === "EQUIVALENT" ? 3 : stage === "ready" ? 2 : 1; return <div className="timeline">{steps.map((step, index) => <div className={`timeline-step ${index <= active ? "active" : ""}`} key={step}>{step}<small>{index <= active ? "complete" : "pending"}</small></div>)}</div>; }
