@@ -9,7 +9,8 @@ test("canonicalization makes equivalent objects hash equally", async () => {
   assert.equal(stableStringify(first), stableStringify(second));
   assert.equal(await canonicalHash(first), await canonicalHash(second));
 });
-test("deterministic comparator detects deadline, quantity, and evidence mismatches", () => {
+test("deterministic comparator detects scope, deadline, quantity, and evidence mismatches", () => {
+  assert.deepEqual(deterministicConflicts(base, { ...base, scope: "different scope" }), ["scope"]);
   assert.deepEqual(deterministicConflicts(base, base), []);
   assert.deepEqual(deterministicConflicts(base, { ...base, deadline: "Friday 17:00 UTC" }), ["deadline"]);
   assert.deepEqual(deterministicConflicts(base, { ...base, quantity: 6, evidence: "one source" }), ["quantity", "evidence"]);

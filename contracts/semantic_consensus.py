@@ -16,6 +16,9 @@ class SemanticConsensus(gl.contract.Contract):
             raise gl.vm.UserError("invalid agreement id")
         if len(input_hash) != 64:
             raise gl.vm.UserError("invalid input hash")
+        for character in input_hash:
+            if character not in "0123456789abcdefABCDEF":
+                raise gl.vm.UserError("invalid input hash")
         evaluation_key = agreement_id + ":" + input_hash
         if self.outcomes.get(evaluation_key, "") != "":
             raise gl.vm.UserError("evaluation already exists")
