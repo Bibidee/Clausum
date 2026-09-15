@@ -7,6 +7,7 @@ const bundledPath = join(root, ".genlayer-python");
 const env = {
   ...process.env,
   PYTHONPATH: [bundledPath, process.env.PYTHONPATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":"),
+  PATH: [join(bundledPath, "bin"), process.env.PATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":"),
   GENVM_REPO: "genlayerlabs/genvm-manager",
   GENVM_VERSION: process.env.GENVM_VERSION || "v0.6.0-rc5",
   PYTHONIOENCODING: "utf-8",

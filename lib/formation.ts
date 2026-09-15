@@ -28,6 +28,9 @@ export interface FormationReceipt {
   formedAt: string;
 }
 
+export const EVALUATION_HASH_VERSION = "EvaluationHashV1";
+export const POLICY_VERSION = "0.1";
+
 export function stableStringify(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
   if (value && typeof value === "object") {
@@ -43,10 +46,25 @@ export async function canonicalHash(value: CanonicalAgreement): Promise<string> 
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
+export function evaluationHashPayload(value: { agreementId: string; partyA: string; partyB: string; question: string; policyVersion: string }): string {
+  const fields = [value.agreementId, value.partyA, value.partyB, value.question, value.policyVersion];
+  const encoder = new TextEncoder();
+  return `${EVALUATION_HASH_VERSION}|${fields.map(field => `${encoder.encode(field).length}:${field}`).join("")}`;
+}
+
 export async function evaluationInputHash(value: { agreementId: string; partyA: string; partyB: string; question: string; policyVersion: string }): Promise<string> {
-  const bytes = new TextEncoder().encode(stableStringify(value));
+  const bytes = new TextEncoder().encode(evaluationHashPayload(value));
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function isEvaluationHashBound(expected: string, supplied: string): boolean {
+  return supplied.length === 64 && supplied.toLowerCase() === expected.toLowerCase() && /^[0-9a-fA-F]{64}$/.test(supplied);
+}
+
+export function createFormationReceipt(input: FormationReceipt): FormationReceipt | null {
+  if (input.verdict !== "EQUIVALENT" || !input.transactionHash || !input.contractAddress || !input.canonicalAgreementHash || !input.evaluationInputHash || input.canonicalAgreementHash !== input.partyARatifiedHash || input.canonicalAgreementHash !== input.partyBRatifiedHash) return null;
+  return { ...input };
 }
 
 export function deterministicConflicts(a: ObligationModel, b: ObligationModel): string[] {

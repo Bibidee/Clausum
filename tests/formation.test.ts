@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canForm, canonicalHash, deterministicConflicts, evaluationInputHash, stableStringify } from "../lib/formation";
+import { canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isEvaluationHashBound, stableStringify } from "../lib/formation";
 
 const base = { scope: "EU providers by revenue", evidence: "two sources", deadline: "Friday 17:00 CET", quantity: 5 };
 test("canonicalization makes equivalent objects hash equally", async () => {
@@ -43,4 +43,25 @@ test("each party must independently ratify the current canonical hash", () => {
   assert.equal(canForm("EQUIVALENT", [], "", "canonical", "input", "input"), false);
   assert.equal(canForm("EQUIVALENT", [], "old", "canonical", "input", "input"), false);
   assert.equal(canForm("EQUIVALENT", [], "canonical", "canonical", "input", "input"), true);
+});
+
+test("evaluation hash is bound to an unambiguous semantic payload", async () => {
+  const vector = { agreementId: "AG-VECTOR-1", partyA: "A", partyB: "B", question: "Q", policyVersion: "0.1" };
+  assert.equal(evaluationHashPayload(vector), "EvaluationHashV1|11:AG-VECTOR-11:A1:B1:Q3:0.1");
+  const expected = await evaluationInputHash(vector);
+  assert.equal(expected, "eb7ef11644f03ee32be27ea965a4b63bfc9ca72a2506168b27d059b3f71bef26");
+  assert.equal(isEvaluationHashBound(expected, expected), true);
+  assert.equal(isEvaluationHashBound(expected, "f".repeat(64)), false);
+  for (const field of ["agreementId", "partyA", "partyB", "question", "policyVersion"] as const) {
+    const mutated = { ...vector, [field]: `${vector[field]}-changed` };
+    assert.notEqual(await evaluationInputHash(mutated), expected, `${field} must affect the hash`);
+  }
+});
+
+test("receipt is issued only for strict formation evidence and remains stable", () => {
+  const baseReceipt = { agreementId: "AG-1", canonicalAgreementHash: "a", evaluationInputHash: "b", verdict: "EQUIVALENT" as const, transactionHash: "0xtx", contractAddress: "0xcontract", network: "Studio-dev", partyARatifiedHash: "a", partyBRatifiedHash: "a", policyVersion: "0.1", formedAt: "2026-01-01T00:00:00.000Z" };
+  assert.equal(createFormationReceipt({ ...baseReceipt, verdict: "UNRESOLVED" }), null);
+  const receipt = createFormationReceipt(baseReceipt);
+  assert.deepEqual(receipt, baseReceipt);
+  assert.equal(createFormationReceipt({ ...baseReceipt, partyBRatifiedHash: "different" }), null);
 });
