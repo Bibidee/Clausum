@@ -9,31 +9,31 @@ equivalent.
 - Canonical serialization and SHA-256 hashes are generated in the browser.
 - Formation is gated by the GenLayer outcome, deterministic comparison, current evaluation input
   hash, and matching hash-bound demo ratifications.
-- The hardened contract is deployed on Studio Next Studio-dev at `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` (chain `61997`).
-- Deployment transaction: `0x9e36a68d6665a8bc7ea57299a69c60b252e98b9f171a471cc932911c0ead0051` (finalized).
-- Live `MATERIAL_CONFLICT` readback passed for input `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` via finalized transaction `0x4d9eead5a319fc2fb39e0b5795a7fb6f03fafa675f9a7335c29c454b4544668a`.
-- Live `EQUIVALENT` readback passed for input `bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`; Studio Next showed finalized transaction `0xee51c99ca2aaa1c5552504df2968787f3d8cbfa8188118ad6c6aeb6840e1f12` (not yet indexed by the explorer).
+- The final hardened contract is deployed on Studio Next Studio-dev at `0x2a30A638456fc607D306c9617963898CdAae8BC6` (chain `61997`).
+- Deployment transaction: `0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df` (finalized).
+- Live `MATERIAL_CONFLICT` readback passed for derived input `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b` via finalized transaction `0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd`.
+- Live `EQUIVALENT` readback passed for derived input `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821` via finalized transaction `0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768`.
 
-## What must be refreshed after this source change
+## Final verification snapshot
 
 The hardened `contracts/semantic_consensus.py` uses per-evaluation `TreeMap` storage and a new ABI
 (`agreement_id`, `input_hash`, Party A, Party B, question). Fresh deployment and both live semantic
-readbacks are complete. Full app wallet E2E and two independent browser-local ratifications remain.
+readbacks are complete. The two live Studio transactions finalized successfully and their readbacks match the expected outcomes.
 
 ## Hackathon limitations
 
 Ratification is a browser-local demo interaction, not a cryptographic signature. Receipts are local
 to the active browser session. These boundaries are deliberately visible in the product and README.
 
-## Verification snapshot
-
-- Final readiness: NOT READY (live Studio contract evidence is complete; app wallet E2E is still blocked by origin-scoped provider injection)
-- Source-freeze baseline HEAD: `2a865086d60dcb5f0e60d1a73bc44b47b44bf019` (evidence-only documentation commits follow)
-- Contract SHA-256: `C96FD945562432745E5055AC1F9335284FDB009E36763BEEC5C99D0DD3121744`
-- Domain tests: PASS (6/6)
+- Final readiness: NOT READY (live contract lifecycle is complete; localhost wallet E2E remains blocked by origin-scoped provider injection)
+- Final source HEAD before documentation: `b2200d8b6fd57d6ab176fb2acb9e8797374edd6c`
+- Contract SHA-256 (GitHub LF blob): `03935B564FAEFB404FD1426B1EB1648ABA3C6DE6561829D575C1793F639EDD16`
+- Domain tests: PASS (8/8)
 - TypeScript: PASS
 - Lint: PASS
 - Frontend build: PASS
 - GenLayer check/validate/typecheck: PASS (zero diagnostics)
-- Reset cleanup and independent ratification rules: covered by the domain suite
+- Reset cleanup, receipt stability, hash binding, and independent ratification rules: covered by the domain suite
 - Full app wallet lifecycle: NOT YET VERIFIED; the local browser origin does not receive Studio Next’s injected wallet provider. Studio Run & Debug live writes/readbacks are verified above.
+
+Historical addresses `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` remain labelled **HISTORICAL**.

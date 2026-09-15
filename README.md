@@ -26,19 +26,19 @@ The project pins the Studio Next RC JavaScript SDK at `genlayer-js@2.0.0-rc.1` a
 - Network: `studio-dev`
 - Chain ID: `61997`
 - RPC: `https://studio-dev.genlayer.com/api`
-- Active contract: `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD`
+- Active contract: `0x2a30A638456fc607D306c9617963898CdAae8BC6`
 - Active source: [contracts/semantic_consensus.py](contracts/semantic_consensus.py)
 
 ### Verified Studio Next evidence
 
-The hardened instance was deployed and finalized on Studio Next (Studio-dev). Its deployment transaction is
-[`0x9e36a68d…ead0051`](https://explorer-studio-next.genlayer.com/tx/0x9e36a68d6665a8bc7ea57299a69c60b252e98b9f171a471cc932911c0ead0051).
-The deployed address is `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD`.
+The final hardened instance was deployed and finalized on Studio Next (Studio-dev). Its deployment transaction is
+[`0xd2570734…f03df`](https://explorer-studio-next.genlayer.com/tx/0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df).
+The deployed address is [`0x2a30A638456fc607D306c9617963898CdAae8BC6`](https://explorer-studio-next.genlayer.com/address/0x2a30A638456fc607D306c9617963898CdAae8BC6).
 
 Live contract evidence for agreement `clausum-live-conflict-20260915`:
 
-- `MATERIAL_CONFLICT`: input hash `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`, finalized transaction [`0x4d9eead5…4544668a`](https://explorer-studio-next.genlayer.com/tx/0x4d9eead5a319fc2fb39e0b5795a7fb6f03fafa675f9a7335c29c454b4544668a); `get_outcome` read returned `MATERIAL_CONFLICT`.
-- `EQUIVALENT`: input hash `bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`, Studio Next Run & Debug showed finalized transaction `0xee51c99ca2aaa1c5552504df2968787f3d8cbfa8188118ad6c6aeb6840e1f12`; `get_outcome` read returned `EQUIVALENT`. The explorer did not index this hash when checked.
+- `MATERIAL_CONFLICT`: derived input hash `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b`, finalized transaction [`0x4724a730…d1efd`](https://explorer-studio-next.genlayer.com/tx/0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd); `get_outcome` read returned `MATERIAL_CONFLICT`.
+- `EQUIVALENT`: derived input hash `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821`, finalized transaction [`0xc8011ec0…15768`](https://explorer-studio-next.genlayer.com/tx/0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768); `get_outcome` read returned `EQUIVALENT`.
 
 ## Formation invariant and current deployment status
 
@@ -47,7 +47,7 @@ Formation is calculated only when all of these are true: the latest GenLayer ver
 interpretations, and Party A and Party B have demo-ratified the same canonical SHA-256 hash.
 Changing interpretations invalidates the previous verdict and both ratifications.
 
-The historical address `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` is retained only as historical evidence.
+The previous `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` addresses are retained only as **HISTORICAL** evidence.
 Browser-local persistence and demo ratification are explicitly hackathon-only; wallet signatures and durable
 receipt storage remain post-hackathon work. The local app’s browser wallet seam requires an injected provider;
 Studio Next’s wallet is origin-scoped, so localhost wallet E2E remains a verification follow-up.
