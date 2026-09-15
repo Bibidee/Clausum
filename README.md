@@ -26,17 +26,19 @@ The project pins the Studio Next RC JavaScript SDK at `genlayer-js@2.0.0-rc.1` a
 - Network: `studio-dev`
 - Chain ID: `61997`
 - RPC: `https://studio-dev.genlayer.com/api`
-- Deployed contract: `0xc363c709592BA8782eB5472153cAf4CeDEcBC084`
-- Active source for the next deployment: [contracts/semantic_consensus.py](contracts/semantic_consensus.py)
+- Active contract: `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD`
+- Active source: [contracts/semantic_consensus.py](contracts/semantic_consensus.py)
 
 ### Verified Studio Next evidence
 
-The v2 instance was deployed and finalized on Studio-dev. Its deployment transaction is
-[`0xe5cf6b99…d4d515c0`](https://explorer-studio-next.genlayer.com/tx/0xe5cf6b99d93bc1c0168f72d6bcab7948e13d644fc21b71d2b97e7a292a085fb1).
+The hardened instance was deployed and finalized on Studio Next (Studio-dev). Its deployment transaction is
+[`0x9e36a68d…ead0051`](https://explorer-studio-next.genlayer.com/tx/0x9e36a68d6665a8bc7ea57299a69c60b252e98b9f171a471cc932911c0ead0051).
+The deployed address is `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD`.
 
-The prior v2 instance recorded an independent semantic-consensus write for `studio-next-equivalent-001`, and the
-on-chain `get_outcome` read returned `EQUIVALENT`. The v2 contract stores outcomes by agreement
-identifier, so later agreement checks do not overwrite earlier results.
+Live contract evidence for agreement `clausum-live-conflict-20260915`:
+
+- `MATERIAL_CONFLICT`: input hash `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`, finalized transaction [`0x4d9eead5…4544668a`](https://explorer-studio-next.genlayer.com/tx/0x4d9eead5a319fc2fb39e0b5795a7fb6f03fafa675f9a7335c29c454b4544668a); `get_outcome` read returned `MATERIAL_CONFLICT`.
+- `EQUIVALENT`: input hash `bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`, Studio Next Run & Debug showed finalized transaction `0xee51c99ca2aaa1c5552504df2968787f3d8cbfa8188118ad6c6aeb6840e1f12`; `get_outcome` read returned `EQUIVALENT`. The explorer did not index this hash when checked.
 
 ## Formation invariant and current deployment status
 
@@ -45,10 +47,10 @@ Formation is calculated only when all of these are true: the latest GenLayer ver
 interpretations, and Party A and Party B have demo-ratified the same canonical SHA-256 hash.
 Changing interpretations invalidates the previous verdict and both ratifications.
 
-The hardened `TreeMap` contract source has a changed ABI and must be deployed as a fresh Studio-dev
-instance. Until that deployment evidence is recorded, the address above remains historical evidence,
-not the address claimed by the hardened UI. Browser-local persistence and demo ratification are
-explicitly hackathon-only; wallet signatures and durable receipt storage remain post-hackathon work.
+The historical address `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` is retained only as historical evidence.
+Browser-local persistence and demo ratification are explicitly hackathon-only; wallet signatures and durable
+receipt storage remain post-hackathon work. The local app’s browser wallet seam requires an injected provider;
+Studio Next’s wallet is origin-scoped, so localhost wallet E2E remains a verification follow-up.
 
 Do not substitute stable Studionet 61999. Studio-dev is resettable and is intended for RC validation.
 
