@@ -24,3 +24,14 @@ readbacks are complete. Full app wallet E2E and two independent browser-local ra
 
 Ratification is a browser-local demo interaction, not a cryptographic signature. Receipts are local
 to the active browser session. These boundaries are deliberately visible in the product and README.
+
+## Verification snapshot
+
+- Contract SHA-256: `C96FD945562432745E5055AC1F9335284FDB009E36763BEEC5C99D0DD3121744`
+- Domain tests: PASS (6/6)
+- TypeScript: PASS
+- Lint: PASS
+- Frontend build: PASS
+- GenLayer check/validate/typecheck: PASS (zero diagnostics)
+- Reset cleanup and independent ratification rules: covered by the domain suite
+- Full app wallet lifecycle: NOT YET VERIFIED; the local browser origin does not receive Studio Next’s injected wallet provider. Studio Run & Debug live writes/readbacks are verified above.
