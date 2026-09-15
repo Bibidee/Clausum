@@ -71,6 +71,9 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 .signal-b i { background: linear-gradient(90deg, transparent, var(--violet)); }
 .signal-b i::after { background: white; box-shadow: 0 0 14px 3px var(--orchid); animation-direction: reverse; }
 .signal-b b { background: var(--orchid); box-shadow: 0 0 20px var(--orchid); }
+.convergence-rail:not(.large) .signal span { position: absolute; top: -18px; z-index: 3; white-space: nowrap; }
+.convergence-rail:not(.large) .signal-a span { left: 0; }
+.convergence-rail:not(.large) .signal-b span { right: 0; }
 .semantic-node { width: 122px; height: 122px; border-radius: 50%; border: 1px solid #7183ff80; background: radial-gradient(circle, #1a2451, #0c1026 68%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; z-index: 2; box-shadow: 0 0 55px #7183ff47, inset 0 0 30px #ffffff0b; animation: nodeBreathe 3.4s ease-in-out infinite; color: var(--peri); }
 .semantic-node strong { font-size: 15px; letter-spacing: .12em; }
 .semantic-node small { font-size: 7px; letter-spacing: .16em; color: var(--muted); }
