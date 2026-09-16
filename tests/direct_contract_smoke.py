@@ -136,3 +136,7 @@ with vm.activate():
         contract.revise_negotiation(agreement_id)
     with vm.expect_revert("formed negotiation is immutable"):
         contract.submit_version(agreement_id, "1", "a", commitment_a, terms_a, **common)
+    with vm.expect_revert("formed negotiation is immutable"):
+        contract.evaluate_negotiation(agreement_id, "1")
+    with vm.expect_revert("formed negotiation is immutable"):
+        contract.ratify(agreement_id, canonical)

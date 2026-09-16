@@ -152,6 +152,8 @@ class SemanticConsensus(gl.contract.Contract):
     @gl.public.write
     def evaluate_negotiation(self, agreement_id: str, revision: str) -> str:
         self._require_negotiation(agreement_id)
+        if self.lifecycle.get(agreement_id, "DRAFT") == "FORMED":
+            raise gl.vm.UserError("formed negotiation is immutable")
         self._validate_revision(agreement_id, revision)
         key_a = self._revision_key(agreement_id, revision, "a")
         key_b = self._revision_key(agreement_id, revision, "b")
@@ -183,6 +185,8 @@ class SemanticConsensus(gl.contract.Contract):
     @gl.public.write
     def ratify(self, agreement_id: str, canonical_hash: str) -> str:
         self._require_negotiation(agreement_id)
+        if self.lifecycle.get(agreement_id, "DRAFT") == "FORMED":
+            raise gl.vm.UserError("formed negotiation is immutable")
         verdict = self.verdicts.get(agreement_id, "NOT_EVALUATED")
         current = self.canonical_hashes.get(agreement_id, "")
         if verdict != "EQUIVALENT" or current == "" or canonical_hash.lower() != current:
