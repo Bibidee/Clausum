@@ -20,6 +20,16 @@ import { connectStudioDev, isStudioDevChain, readProviderChainId, studioDevConfi
 
 const QUESTION = "Do these interpretations establish materially equivalent obligations?";
 const CONTRACT = process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || "";
+function describeWalletError(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "object" && error !== null) {
+    const details = error as { shortMessage?: unknown; message?: unknown; details?: unknown };
+    for (const value of [details.shortMessage, details.message, details.details]) {
+      if (typeof value === "string" && value.trim()) return value;
+    }
+  }
+  return "GenLayer transaction failed.";
+}
 export function createAgreementId(randomUUID?: () => string): string {
   const uuid = randomUUID ?? globalThis.crypto?.randomUUID?.bind(globalThis.crypto);
   if (uuid) return `AG-${uuid().toUpperCase()}`;
@@ -498,7 +508,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
           currentEvaluationHash: previous.evaluationHash,
         });
         if (!current) return { ...previous, status: previous.status === "submitting" ? "idle" : previous.status, notice: "A stale semantic error was safely discarded." };
-        return { ...previous, status: "error", notice: error instanceof Error ? error.message : "GenLayer transaction failed." };
+        return { ...previous, status: "error", notice: describeWalletError(error) };
       });
     }
   };
