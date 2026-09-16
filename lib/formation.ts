@@ -41,6 +41,7 @@ export interface ReceiptEvidence {
 
 export const EVALUATION_HASH_VERSION = "EvaluationHashV1";
 export const POLICY_VERSION = "0.1";
+export const VERSION_COMMITMENT_VERSION = "VersionCommitmentV1";
 
 export function stableStringify(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
@@ -66,6 +67,17 @@ export function evaluationHashPayload(value: { agreementId: string; partyA: stri
 export async function evaluationInputHash(value: { agreementId: string; partyA: string; partyB: string; question: string; policyVersion: string }): Promise<string> {
   const bytes = new TextEncoder().encode(evaluationHashPayload(value));
   const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function versionCommitmentPayload(value: { agreementId: string; revision: string; party: "a" | "b"; semanticTerms: string; scope: string; evidence: string; deadline: string; quantity: string; policyVersion?: string }): string {
+  const fields = [value.agreementId, value.revision, value.party, value.scope, value.evidence, value.deadline, value.quantity, value.semanticTerms, value.policyVersion ?? POLICY_VERSION];
+  const encoder = new TextEncoder();
+  return `${VERSION_COMMITMENT_VERSION}|${fields.map(field => `${encoder.encode(field).length}:${field}`).join("")}`;
+}
+
+export async function versionCommitmentHash(value: { agreementId: string; revision: string; party: "a" | "b"; semanticTerms: string; scope: string; evidence: string; deadline: string; quantity: string; policyVersion?: string }): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(versionCommitmentPayload(value)));
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 

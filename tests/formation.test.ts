@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, stableStringify } from "../lib/formation";
+import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, stableStringify, versionCommitmentHash, versionCommitmentPayload } from "../lib/formation";
 import { amendFormationState, clearRuntime, configureDraftState, createAgreementId, initialState, ratifyFormationState, resetFormationState } from "../lib/formation-context";
 import { demoScenarios, deriveConservativeObligations } from "../lib/demo-scenarios";
 import { isStudioDevChain, parseChainId, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
@@ -84,6 +84,14 @@ test("evaluation hash is bound to an unambiguous semantic payload", async () => 
     const mutated = { ...vector, [field]: `${vector[field]}-changed` };
     assert.notEqual(await evaluationInputHash(mutated), expected, `${field} must affect the hash`);
   }
+});
+
+test("version commitments bind party, revision, hard fields, semantic terms, and policy", async () => {
+  const value = { agreementId: "AG-DIRECT-001", revision: "1", party: "a" as const, semanticTerms: "Fix critical vulnerabilities before payment.", scope: "eu providers", evidence: "two public sources", deadline: "2030-01-01T17:00Z", quantity: "5", policyVersion: "0.1" };
+  assert.equal(versionCommitmentPayload(value), "VersionCommitmentV1|13:AG-DIRECT-0011:11:a12:eu providers18:two public sources17:2030-01-01T17:00Z1:544:Fix critical vulnerabilities before payment.3:0.1");
+  assert.equal(await versionCommitmentHash(value), "35306bb99a540642f50257dca0c0dc2ab5e36986cb79b2dd1b00e566b9c4b8da");
+  assert.notEqual(await versionCommitmentHash({ ...value, party: "b" }), await versionCommitmentHash(value));
+  assert.notEqual(await versionCommitmentHash({ ...value, semanticTerms: "changed" }), await versionCommitmentHash(value));
 });
 
 test("receipt is issued only for strict formation evidence and remains stable", () => {
