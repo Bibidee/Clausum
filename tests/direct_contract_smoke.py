@@ -46,8 +46,9 @@ with vm.activate():
     contract = deploy_contract("contracts/semantic_consensus.py", vm, sdk_version="v0.6.0-rc5")
     vm.sender = party_a
     gl_call._imp_raw = wasi_mock.gl_call
-    eq_principle.prompt_non_comparative = lambda *args, **kwargs: "EQUIVALENT"
-    gl.eq_principle.prompt_non_comparative = lambda *args, **kwargs: "EQUIVALENT"
+    semantic_result = {"value": "EQUIVALENT"}
+    eq_principle.prompt_non_comparative = lambda *args, **kwargs: semantic_result["value"]
+    gl.eq_principle.prompt_non_comparative = lambda *args, **kwargs: semantic_result["value"]
     agreement_id = "AG-DIRECT-001"
     print("DEPLOYED", type(contract).__name__)
     print("PARTIES", party_a.as_hex, party_b.as_hex)
@@ -75,6 +76,21 @@ with vm.activate():
     assert contract.get_formation_state(conflict_id) == "DRAFT"
     with vm.expect_revert("both party versions are required"):
         contract.evaluate_negotiation(conflict_id, "2")
+    unresolved_id = "AG-DIRECT-UNRESOLVED"
+    contract.create_negotiation(unresolved_id, Address(party_b), "0.1")
+    unresolved_terms = "The parties may deliver a reasonable report when practical."
+    unresolved_fields = dict(scope="eu providers", evidence="two public sources", deadline="2030-01-01T17:00Z", quantity="5")
+    ua = version_hash(unresolved_id, "1", "a", unresolved_terms, **unresolved_fields)
+    ub = version_hash(unresolved_id, "1", "b", unresolved_terms, **unresolved_fields)
+    contract.submit_version(unresolved_id, "1", "a", ua, unresolved_terms, **unresolved_fields)
+    with vm.prank(party_b):
+        contract.submit_version(unresolved_id, "1", "b", ub, unresolved_terms, **unresolved_fields)
+    semantic_result["value"] = "UNRESOLVED"
+    assert contract.evaluate_negotiation(unresolved_id, "1") == "UNRESOLVED"
+    assert contract.get_verdict(unresolved_id) == "UNRESOLVED"
+    assert contract.get_formation_state(unresolved_id) == "BLOCKED"
+    print("UNRESOLVED", contract.get_formation_state(unresolved_id))
+    semantic_result["value"] = "EQUIVALENT"
     terms_a = "Fix critical vulnerabilities before payment."
     terms_b = "Resolve critical vulnerabilities before payment."
     common = dict(scope="eu providers", evidence="two public sources", deadline="2030-01-01T17:00Z", quantity="5")
