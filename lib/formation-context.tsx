@@ -72,7 +72,6 @@ interface FormationContextValue extends FormationState {
   amend: () => void;
   connect: () => Promise<void>;
   switchNetwork: () => Promise<void>;
-  setWalletNetworkSwitcher: (switcher: (() => Promise<void>) | null) => void;
   setWalletSession: (wallet: string | null, provider: Eip1193Provider | null) => void;
   evaluate: () => Promise<void>;
   ratify: (party: "a" | "b") => void;
@@ -189,7 +188,6 @@ export function FormationProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<FormationState>(() => initialState(""));
   const [hydrated, setHydrated] = useState(false);
   const walletProviderRef = useRef<Eip1193Provider | null>(null);
-  const walletNetworkSwitcherRef = useRef<(() => Promise<void>) | null>(null);
   const walletListenersRef = useRef<{ provider: Eip1193Provider; chain: (...args: unknown[]) => void; accounts: (...args: unknown[]) => void } | null>(null);
   const hashRequestRef = useRef(0);
   const evaluationRequestRef = useRef(0);
@@ -394,10 +392,6 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const setWalletNetworkSwitcher = useCallback((switcher: (() => Promise<void>) | null) => {
-    walletNetworkSwitcherRef.current = switcher;
-  }, []);
-
   const connect = async () => {
     const provider = walletProviderRef.current;
     if (!provider) {
@@ -416,7 +410,6 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     const provider = walletProviderRef.current;
     if (!provider) { setState(previous => ({ ...previous, notice: "Connect a wallet before switching networks." })); return; }
     try {
-      await walletNetworkSwitcherRef.current?.();
       const chainId = await switchToStudioDev(provider);
       setState(previous => ({ ...previous, walletChainId: chainId, walletReady: true, notice: "Wallet connected to Studio-dev · 61997." }));
     } catch (error) {
@@ -464,7 +457,6 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       notice: "Submitting semantic question to GenLayer validators…",
     }));
     try {
-      await walletNetworkSwitcherRef.current?.();
       const result = await submitConsensus(provider, CONTRACT as `0x${string}`, {
         agreementId: requestAgreementId,
         inputHash: requestEvaluationHash,
@@ -532,7 +524,6 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     amend,
     connect,
     switchNetwork,
-    setWalletNetworkSwitcher,
     setWalletSession,
     evaluate,
     ratify,
