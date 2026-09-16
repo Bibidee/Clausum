@@ -37,6 +37,7 @@ to the active browser session. These boundaries are deliberately visible in the 
 - Lint: PASS
 - Frontend build: PASS
 - GenLayer check/validate/typecheck: PASS (zero diagnostics; cached GenVM artifact `v0.6.0-rc5`)
+- Direct GenVM state-machine smoke: PASS (contract deployment, duplicate-ID rejection, unauthorized submission rejection, hard-field `MATERIAL_CONFLICT`, revision reset, `EQUIVALENT`, independent Party A/B ratification, and `FORMED`). The semantic response is process-local in this smoke because the prerelease direct harness does not expose a working LLM response decoder on Windows; this is not claimed as live validator consensus.
 - Reown modal and supported wallet options: verified on the production origin.
 - EIP-1193 provider bridge into the GenLayer adapter: implemented; the provider's `eth_chainId` is checked against Studio-dev `61997` before a write.
 - Connected account, disconnect/reconnect, network switching, and a signed app transaction: **not verified** because no wallet session/provider was available in the browser environment.
