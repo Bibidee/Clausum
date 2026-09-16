@@ -145,13 +145,17 @@ export async function ratifyNegotiation(provider: Eip1193Provider, contractAddre
 
 export async function readFormationState(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, knownAccount?: string) {
   const { client } = await connectStudioDev(provider, knownAccount);
-  const [state, canonicalHash, ratifications] = await Promise.all([
+  const [state, canonicalHash, ratifications, verdict, partyAddresses, receipt] = await Promise.all([
     client.readContract({ address: contractAddress, functionName: "get_formation_state", args: [agreementId] }),
     client.readContract({ address: contractAddress, functionName: "get_canonical_hash", args: [agreementId] }),
     client.readContract({ address: contractAddress, functionName: "get_ratifications", args: [agreementId] }),
+    client.readContract({ address: contractAddress, functionName: "get_verdict", args: [agreementId] }),
+    client.readContract({ address: contractAddress, functionName: "get_party_addresses", args: [agreementId] }),
+    client.readContract({ address: contractAddress, functionName: "get_formation_receipt", args: [agreementId] }),
   ]);
   const [partyA, partyB] = typeof ratifications === "string" ? ratifications.split(":", 2) : ["", ""];
-  return { state: String(state), canonicalHash: String(canonicalHash), partyARatifiedHash: partyA, partyBRatifiedHash: partyB };
+  const [partyAAddress, partyBAddress] = typeof partyAddresses === "string" ? partyAddresses.split(":", 2) : ["", ""];
+  return { state: String(state), verdict: String(verdict), canonicalHash: String(canonicalHash), partyARatifiedHash: partyA, partyBRatifiedHash: partyB, partyAAddress, partyBAddress, receipt: String(receipt) };
 }
 
 export async function submitConsensus(
