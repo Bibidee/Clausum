@@ -54,8 +54,12 @@ receipt storage remain post-hackathon work. The app now uses Reown AppKit for Wa
 selection and exposes the connected EIP-1193 provider to the Studio-dev transaction adapter.
 
 The current production frontend is live at [clausum.vercel.app](https://clausum.vercel.app) with routes for
-`/workspace`, `/consensus`, `/ratification`, and `/receipt`. It preserves the formation provider across route
-changes and renders the Formation Receipt from runtime values only after matching ratification.
+`/workspace`, `/consensus`, `/ratification`, and `/receipt`. The production deployment is
+`dpl_3t5SEkSU9Gvy5Xyy8EMpyV1XXMw1` from commit
+`db48e35590f2d9f4b1b486d9b853cfd0103252c1`. It preserves the formation provider across route changes and
+renders the Formation Receipt from runtime values only after matching ratification. Reown AppKit's wallet
+selection modal is verified in production; a signed wallet transaction still requires a wallet session in the
+browser environment.
 
 Do not substitute stable Studionet 61999. Studio-dev is resettable and is intended for RC validation.
 
