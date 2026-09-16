@@ -11,6 +11,34 @@ export const STUDIO_DEV_CHAIN_ID_HEX = "0xf22d";
 
 export interface Eip1193Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
+  on?: (event: string, listener: (...args: unknown[]) => void) => void;
+  removeListener?: (event: string, listener: (...args: unknown[]) => void) => void;
+}
+
+export async function switchToStudioDev(provider: Eip1193Provider): Promise<number> {
+  try {
+    await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: STUDIO_DEV_CHAIN_ID_HEX }] });
+  } catch (error) {
+    const code = typeof error === "object" && error !== null && "code" in error ? (error as { code?: unknown }).code : undefined;
+    if (code !== 4902) throw new Error("Network switch was cancelled.");
+    try {
+      await provider.request({ method: "wallet_addEthereumChain", params: [{
+        chainId: STUDIO_DEV_CHAIN_ID_HEX,
+        chainName: "GenLayer Studio-dev",
+        rpcUrls: [studioDevConfig.rpc],
+        blockExplorerUrls: ["https://explorer-studio-dev.genlayer.com"],
+        nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
+      }] });
+    } catch (addError) {
+      const addCode = typeof addError === "object" && addError !== null && "code" in addError ? (addError as { code?: unknown }).code : undefined;
+      if (addCode === 4001) throw new Error("Network switch was cancelled.");
+      throw addError;
+    }
+    await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: STUDIO_DEV_CHAIN_ID_HEX }] });
+  }
+  const chainId = await readProviderChainId(provider);
+  if (!isStudioDevChain(chainId)) throw new Error(`Studio-dev was requested, but the wallet is still on chain ${chainId}.`);
+  return chainId;
 }
 
 export function parseChainId(value: unknown): number | null {
@@ -57,10 +85,8 @@ export async function connectStudioDev(provider: Eip1193Provider) {
   const accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
   const account = accounts?.[0];
   if (!account) throw new Error("No wallet account was returned by the connected wallet.");
-  const chainId = await readProviderChainId(provider);
-  if (!isStudioDevChain(chainId)) {
-    throw new Error(`Wrong wallet network (${chainId}). Switch to GenLayer Studio-dev (chain ${studioDevConfig.chainId}).`);
-  }
+  let chainId = await readProviderChainId(provider);
+  if (!isStudioDevChain(chainId)) chainId = await switchToStudioDev(provider);
   const client = createClient({ chain: studioDevnet, account: account as `0x${string}`, provider });
   await client.connect();
   return { client, account: account as `0x${string}`, chainId };

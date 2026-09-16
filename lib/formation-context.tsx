@@ -16,7 +16,7 @@ import {
   type ObligationModel,
   type SemanticOutcome,
 } from "./formation";
-import { connectStudioDev, isStudioDevChain, readProviderChainId, studioDevConfig, submitConsensus, type Eip1193Provider } from "./genlayer";
+import { connectStudioDev, isStudioDevChain, readProviderChainId, studioDevConfig, submitConsensus, switchToStudioDev, type Eip1193Provider } from "./genlayer";
 
 const QUESTION = "Do these interpretations establish materially equivalent obligations?";
 const CONTRACT = process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || "";
@@ -71,6 +71,7 @@ interface FormationContextValue extends FormationState {
   configureDraft: (draft: { title: string; partyAName: string; partyBName: string; obligations: ObligationModel }) => void;
   amend: () => void;
   connect: () => Promise<void>;
+  switchNetwork: () => Promise<void>;
   setWalletSession: (wallet: string | null, provider: Eip1193Provider | null) => void;
   evaluate: () => Promise<void>;
   ratify: (party: "a" | "b") => void;
@@ -187,6 +188,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<FormationState>(() => initialState(""));
   const [hydrated, setHydrated] = useState(false);
   const walletProviderRef = useRef<Eip1193Provider | null>(null);
+  const walletListenersRef = useRef<{ provider: Eip1193Provider; chain: (...args: unknown[]) => void; accounts: (...args: unknown[]) => void } | null>(null);
   const hashRequestRef = useRef(0);
   const evaluationRequestRef = useRef(0);
   const model = useMemo(() => ({
@@ -336,6 +338,12 @@ export function FormationProvider({ children }: { children: ReactNode }) {
   };
 
   const setWalletSession = useCallback((wallet: string | null, provider: Eip1193Provider | null) => {
+    if (walletListenersRef.current && walletListenersRef.current.provider !== provider) {
+      const previous = walletListenersRef.current;
+      previous.provider.removeListener?.("chainChanged", previous.chain);
+      previous.provider.removeListener?.("accountsChanged", previous.accounts);
+      walletListenersRef.current = null;
+    }
     walletProviderRef.current = provider;
     if (!wallet || !provider) {
       setState(previous => ({
@@ -346,6 +354,11 @@ export function FormationProvider({ children }: { children: ReactNode }) {
         notice: "Wallet disconnected.",
       }));
       return;
+    }
+    if (provider.on && !walletListenersRef.current) {
+      const chain = (raw: unknown) => { const chainId = typeof raw === "string" ? Number.parseInt(raw, 16) : null; setState(previous => ({ ...previous, walletChainId: Number.isFinite(chainId) ? chainId : null, walletReady: isStudioDevChain(Number.isFinite(chainId) ? chainId : null) })); };
+      const accounts = (raw: unknown) => { const next = Array.isArray(raw) ? raw[0] : null; if (typeof next !== "string") setState(previous => ({ ...previous, wallet: null, walletReady: false, walletChainId: null, notice: "Wallet disconnected." })); };
+      provider.on("chainChanged", chain); provider.on("accountsChanged", accounts); walletListenersRef.current = { provider, chain, accounts };
     }
     setState(previous => ({
       ...previous,
@@ -390,6 +403,17 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       setWalletSession(result.account, provider);
     } catch (error) {
       setState(previous => ({ ...previous, walletReady: false, notice: error instanceof Error ? error.message : "Wallet connection failed." }));
+    }
+  };
+
+  const switchNetwork = async () => {
+    const provider = walletProviderRef.current;
+    if (!provider) { setState(previous => ({ ...previous, notice: "Connect a wallet before switching networks." })); return; }
+    try {
+      const chainId = await switchToStudioDev(provider);
+      setState(previous => ({ ...previous, walletChainId: chainId, walletReady: true, notice: "Wallet connected to Studio-dev · 61997." }));
+    } catch (error) {
+      setState(previous => ({ ...previous, walletReady: false, notice: error instanceof Error ? error.message : "Unable to switch to Studio-dev." }));
     }
   };
 
@@ -499,6 +523,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     configureDraft,
     amend,
     connect,
+    switchNetwork,
     setWalletSession,
     evaluate,
     ratify,

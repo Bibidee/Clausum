@@ -3,9 +3,34 @@ import assert from "node:assert/strict";
 import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, stableStringify } from "../lib/formation";
 import { amendFormationState, clearRuntime, configureDraftState, createAgreementId, initialState, ratifyFormationState, resetFormationState } from "../lib/formation-context";
 import { demoScenarios, deriveConservativeObligations } from "../lib/demo-scenarios";
-import { isStudioDevChain, parseChainId, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX } from "../lib/genlayer";
+import { isStudioDevChain, parseChainId, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
 
 const base = { scope: "EU providers by revenue", evidence: "two sources", deadline: "Friday 17:00 CET", quantity: 5 };
+test("network helper verifies an already-correct chain", async () => {
+  const calls: string[] = [];
+  const provider = { request: async ({ method }: { method: string }) => { calls.push(method); return "0xf22d"; } };
+  assert.equal(await switchToStudioDev(provider), 61997);
+  assert.deepEqual(calls, ["wallet_switchEthereumChain", "eth_chainId"]);
+});
+test("network helper adds an unknown Studio-dev chain then rechecks it", async () => {
+  const calls: string[] = [];
+  const provider = { request: async ({ method }: { method: string }) => { calls.push(method); if (method === "wallet_switchEthereumChain" && calls.length === 1) throw { code: 4902 }; return method === "eth_chainId" ? "0xf22d" : null; } };
+  assert.equal(await switchToStudioDev(provider), 61997);
+  assert.deepEqual(calls, ["wallet_switchEthereumChain", "wallet_addEthereumChain", "wallet_switchEthereumChain", "eth_chainId"]);
+});
+test("network helper rejects a switch that leaves the wallet on the wrong chain", async () => {
+  const provider = { request: async ({ method }: { method: string }) => method === "eth_chainId" ? "0x1234" : null };
+  await assert.rejects(() => switchToStudioDev(provider), /still on chain/);
+});
+test("network helper surfaces a user-rejected switch", async () => {
+  const provider = { request: async () => { throw { code: 4001 }; } };
+  await assert.rejects(() => switchToStudioDev(provider), /cancelled/);
+});
+test("network helper surfaces a rejected add-chain request", async () => {
+  let first = true;
+  const provider = { request: async ({ method }: { method: string }) => { if (method === "wallet_switchEthereumChain" && first) { first = false; throw { code: 4902 }; } throw { code: 4001 }; } };
+  await assert.rejects(() => switchToStudioDev(provider), /cancelled/);
+});
 test("canonicalization makes equivalent objects hash equally", async () => {
   const first = { parties: ["A", "B"], obligations: base, policyVersion: "0.1" } as const;
   const second = { policyVersion: "0.1", obligations: { quantity: 5, deadline: "Friday 17:00 CET", evidence: "two sources", scope: "EU providers by revenue" }, parties: ["A", "B"] } as const;
