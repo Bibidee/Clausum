@@ -473,7 +473,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
         buyerInterpretation: requestPartyA,
         sellerInterpretation: requestPartyB,
         question: QUESTION,
-      });
+      }, state.wallet ?? undefined);
       setState(previous => {
         const current = isEvaluationRequestCurrent({
           requestId: request,

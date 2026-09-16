@@ -81,8 +81,8 @@ function isSemanticOutcome(value: unknown): value is SemanticOutcome {
   return value === "EQUIVALENT" || value === "MATERIAL_CONFLICT" || value === "UNRESOLVED";
 }
 
-export async function connectStudioDev(provider: Eip1193Provider) {
-  const accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
+export async function connectStudioDev(provider: Eip1193Provider, knownAccount?: string) {
+  const accounts = knownAccount ? [knownAccount] : await provider.request({ method: "eth_requestAccounts" }) as string[];
   const account = accounts?.[0];
   if (!account) throw new Error("No wallet account was returned by the connected wallet.");
   let chainId = await readProviderChainId(provider);
@@ -96,8 +96,9 @@ export async function submitConsensus(
   provider: Eip1193Provider,
   contractAddress: `0x${string}`,
   input: ConsensusSubmission,
+  knownAccount?: string,
 ): Promise<ConsensusReceipt> {
-  const { client } = await connectStudioDev(provider);
+  const { client } = await connectStudioDev(provider, knownAccount);
   const write = { address: contractAddress, functionName: "evaluate", args: [input.agreementId, input.inputHash, input.buyerInterpretation, input.sellerInterpretation, input.question] };
   const estimate = await client.estimateTransactionFeesForWrite(write);
   const transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
