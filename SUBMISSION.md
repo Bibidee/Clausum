@@ -30,7 +30,7 @@ to the active browser session. These boundaries are deliberately visible in the 
 
 - Submission readiness: reviewable with a disclosed wallet signing limitation. Production tracks `main`; consult the deployment record for its current commit.
 - Contract SHA-256 (final source): `667B39596F98EBB4FFCB01426F3F5B5F9A1866518BC32E8C2AC43F8857158872`
-- Domain tests: PASS (18/18). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
+- Domain tests: PASS (23/23). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
 - TypeScript: PASS
 - Lint: PASS
 - Frontend build: PASS

@@ -61,7 +61,7 @@ readback. Transaction and contract explorer links provide network evidence. Reow
 modal has been verified in production; a signed transaction through the production app has not been
 independently verified because no connected wallet session was available.
 
-The domain suite passes **18/18** tests. It covers canonicalization, conflict and formation rules, receipt
+The domain suite passes **23/23** tests. It covers canonicalization, conflict and formation rules, receipt
 consistency, hash readiness and stale-result protection, Studio-dev wallet chain gating, cryptographically
 generated agreement IDs across fresh/reset/new-draft flows, amendment identity preservation, duplicate-name
 Party A/B ratification, and the structured procurement demo's quantity and two initial conflicts.
