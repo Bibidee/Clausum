@@ -19,6 +19,7 @@ const env = {
 
 const candidates = [
   process.env.GENLAYER_PYTHON,
+  join(portablePython, "python.exe"),
   join(root, ".genlayer-python-runtime", "python.exe"),
   process.platform === "win32" && process.env.LOCALAPPDATA
     ? join(process.env.LOCALAPPDATA, "Programs", "Python", "Python312", "python.exe")
