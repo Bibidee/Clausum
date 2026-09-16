@@ -1,8 +1,7 @@
 # CLAUSUM submission readiness
 
 CLAUSUM is a semantic formation layer for autonomous agreements. GenLayer is necessary because
-deterministic comparison cannot decide whether independently expressed obligations are materially
-equivalent.
+deterministic comparison cannot decide whether two interpretations establish materially equivalent obligations.
 
 ## What is real today
 
@@ -14,8 +13,7 @@ equivalent.
 - Live `MATERIAL_CONFLICT` readback passed for derived input `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b` via finalized transaction `0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd`.
 - Live `EQUIVALENT` readback passed for derived input `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821` via finalized transaction `0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768`.
 - Vercel Production is connected to `Bibidee/Clausum`, tracks `main`, and serves the Semantic Aurora
-  multi-page frontend at `https://clausum.vercel.app` from the pushed source commit
-  `33a186a291620da7789a90fc7021dc0b7776bfea`.
+  multi-page frontend at `https://clausum.vercel.app`.
 - Production configuration includes the fresh contract address, Studio-dev RPC (`https://studio-dev.genlayer.com/api`),
   chain `61997`, and `NEXT_PUBLIC_CLAUSUM_MODE=demo`.
 
@@ -30,17 +28,17 @@ readbacks are complete. The two live Studio transactions finalized successfully 
 Ratification is a browser-local demo interaction, not a cryptographic signature. Receipts are local
 to the active browser session. These boundaries are deliberately visible in the product and README.
 
-- Final readiness: READY for review (Reown wallet modal and Studio-dev configuration verified; signed wallet E2E requires an available wallet session)
-- Final production commit: `db48e35590f2d9f4b1b486d9b853cfd0103252c1`
+- Submission readiness: reviewable with a disclosed wallet signing limitation. Production tracks `main`; consult the deployment record for its current commit.
 - Contract SHA-256 (final source): `667B39596F98EBB4FFCB01426F3F5B5F9A1866518BC32E8C2AC43F8857158872`
-- Domain tests: PASS (8/8)
+- Domain tests: PASS (14/14), including stale evidence, request identity, reset invalidation, hash readiness, and wallet chain gating.
 - TypeScript: PASS
 - Lint: PASS
 - Frontend build: PASS
 - GenLayer check/validate/typecheck: PASS (zero diagnostics)
-- Reset cleanup, receipt stability, hash binding, and independent ratification rules: covered by the domain suite
-- Full app wallet lifecycle: modal opening and supported-wallet options verified on the Vercel origin. A connected
-  account, disconnect/reconnect, network switch, and signed transaction were not exercised because no wallet
-  session/provider was available in the browser environment. Studio Run & Debug live writes/readbacks are verified above.
+- Reown modal and supported wallet options: verified on the production origin.
+- EIP-1193 provider bridge into the GenLayer adapter: implemented; the provider's `eth_chainId` is checked against Studio-dev `61997` before a write.
+- Connected account, disconnect/reconnect, network switching, and a signed app transaction: **not verified** because no wallet session/provider was available in the browser environment.
+- Studio Run & Debug deployment, live writes, finalization, and `get_outcome` readbacks: verified with the transactions above.
+- Browser receipt: issued from current finalized transaction, canonical hash, evaluation hash, and both local ratifications. It is not a cryptographic signature. `/verify` checks local session consistency, not a fresh on-chain read.
 
 Historical addresses `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` remain labelled **HISTORICAL**.

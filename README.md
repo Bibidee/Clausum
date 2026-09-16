@@ -6,7 +6,7 @@ CLAUSUM is a semantic formation layer for autonomous agreements. It establishes 
 
 ## What is built
 
-- Independent structured interpretations for two parties.
+- Guided demo interpretations for two parties; independent external agent input is future work.
 - Deterministic comparison for quantities, evidence, and deadlines.
 - A GenLayer Intelligent Contract that submits disputed semantic questions to validator consensus.
 - Canonical deterministic serialization and SHA-256 hashing.
@@ -23,6 +23,7 @@ The browser never declares an agreement formed by itself. Formation is derived f
 ## Studio Next integration
 
 The project pins the Studio Next RC JavaScript SDK at `genlayer-js@2.0.0-rc.1` and the CLI at `genlayer@0.40.0-rc.3`.
+The `@x402/*` packages are present to satisfy transitive Reown/Coinbase wallet dependency resolution during production builds; CLAUSUM does not expose x402 as an application feature.
 
 - Network: `studio-dev`
 - Chain ID: `61997`
@@ -53,12 +54,11 @@ Browser-local persistence and demo ratification are explicitly hackathon-only; w
 receipt storage remain post-hackathon work. The app now uses Reown AppKit for WalletConnect-compatible wallet
 selection and exposes the connected EIP-1193 provider to the Studio-dev transaction adapter.
 
-The current production frontend is live at [clausum.vercel.app](https://clausum.vercel.app) with routes for
-`/workspace`, `/consensus`, `/ratification`, and `/receipt`. It currently serves `main` at commit
-`33a186a291620da7789a90fc7021dc0b7776bfea` and preserves the formation provider across route changes and
-renders the Formation Receipt from runtime values only after matching ratification. Reown AppKit's wallet
-selection modal is verified in production; a signed wallet transaction still requires a wallet session in the
-browser environment.
+The production frontend is live at [clausum.vercel.app](https://clausum.vercel.app) and tracks the `main` branch.
+It preserves the formation provider across routes and renders a browser-session Formation Receipt only after
+matching ratification. The `/verify` page checks local receipt consistency; it does not perform a fresh GenLayer
+readback. Transaction and contract explorer links provide network evidence. Reown AppKit's wallet selection
+modal has been verified in production; a signed wallet transaction still requires a connected wallet session.
 
 Do not substitute stable Studionet 61999. Studio-dev is resettable and is intended for RC validation.
 
@@ -88,15 +88,15 @@ Copy `.env.example` to `.env.local`.
 | `NEXT_PUBLIC_GENLAYER_RPC_URL` | Optional | Studio-dev RPC override. |
 | `NEXT_PUBLIC_GENLAYER_CHAIN_ID` | Optional | Must be `61997` for Studio-dev. |
 | `NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS` | Required for live writes | Address produced by a verified Studio-dev deployment. |
-| `NEXT_PUBLIC_REOWN_PROJECT_ID` | Required for wallet modal | Reown AppKit project ID used for WalletConnect-compatible wallet selection. |
+| `NEXT_PUBLIC_REOWN_PROJECT_ID` | Recommended | Reown AppKit project ID used for WalletConnect-compatible wallet selection; the supplied public demo ID is a source fallback. |
 
 Never place private keys, seed phrases, or wallet secrets in any environment file.
 
 ## Demo flow
 
 1. Show the shared natural-language agreement.
-2. Compare independent meanings and surface deterministic conflicts.
-3. Submit the semantic question through the Studio-dev path, or clearly show the local demo fallback.
+2. Compare the guided demo interpretations and surface deterministic conflicts.
+3. Connect a Studio-dev wallet and submit the semantic question through the deployed contract.
 4. Resolve the conflicting obligations and re-analyze.
 5. Compile one canonical Agreement Object.
 6. Ratify it as both parties and verify the Formation Receipt.
@@ -107,7 +107,7 @@ See [DEMO.md](DEMO.md) for the judge-facing script.
 
 **One-line pitch:** CLAUSUM proves two autonomous parties mean the same thing before they commit value.
 
-**Live demo:** [clausum-formation.ojikutusarat.chatgpt.site](https://clausum-formation.ojikutusarat.chatgpt.site)
+**Live demo:** [clausum.vercel.app](https://clausum.vercel.app)
 
 **Problem:** matching text and signatures do not guarantee matching obligations when agents reason independently.
 

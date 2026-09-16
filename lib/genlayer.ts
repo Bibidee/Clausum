@@ -7,9 +7,31 @@ export const studioDevConfig = {
   rpc: "https://studio-dev.genlayer.com/api",
 } as const;
 
+export const STUDIO_DEV_CHAIN_ID_HEX = "0xf22d";
 
 export interface Eip1193Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
+}
+
+export function parseChainId(value: unknown): number | null {
+  if (typeof value === "number" && Number.isInteger(value)) return value;
+  if (typeof value !== "string" || !value.trim()) return null;
+  const normalized = value.trim().toLowerCase();
+  if (!(/^(0x[0-9a-f]+|[0-9]+)$/.test(normalized))) return null;
+  const parsed = normalized.startsWith("0x") ? Number.parseInt(normalized, 16) : Number.parseInt(normalized, 10);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+}
+
+export async function readProviderChainId(provider: Eip1193Provider): Promise<number> {
+  const raw = await provider.request({ method: "eth_chainId" });
+  if (typeof raw !== "string" || !/^0x[0-9a-fA-F]+$/.test(raw)) throw new Error("Wallet returned an invalid chain ID.");
+  const chainId = parseChainId(raw);
+  if (chainId === null) throw new Error("Wallet returned an invalid chain ID.");
+  return chainId;
+}
+
+export function isStudioDevChain(chainId: number | null): boolean {
+  return chainId === studioDevConfig.chainId;
 }
 
 export interface ConsensusSubmission {
@@ -35,9 +57,13 @@ export async function connectStudioDev(provider: Eip1193Provider) {
   const accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
   const account = accounts?.[0];
   if (!account) throw new Error("No wallet account was returned by the connected wallet.");
+  const chainId = await readProviderChainId(provider);
+  if (!isStudioDevChain(chainId)) {
+    throw new Error(`Wrong wallet network (${chainId}). Switch to GenLayer Studio-dev (chain ${studioDevConfig.chainId}).`);
+  }
   const client = createClient({ chain: studioDevnet, account: account as `0x${string}`, provider });
   await client.connect();
-  return { client, account: account as `0x${string}` };
+  return { client, account: account as `0x${string}`, chainId };
 }
 
 export async function submitConsensus(

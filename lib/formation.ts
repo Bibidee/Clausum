@@ -28,6 +28,17 @@ export interface FormationReceipt {
   formedAt: string;
 }
 
+export interface ReceiptEvidence {
+  agreementId: string;
+  canonicalHash: string;
+  evaluationHash: string;
+  verdictHash: string;
+  transactionHash: string;
+  contractAddress: string;
+  network: string;
+  policyVersion: string;
+}
+
 export const EVALUATION_HASH_VERSION = "EvaluationHashV1";
 export const POLICY_VERSION = "0.1";
 
@@ -65,6 +76,73 @@ export function isEvaluationHashBound(expected: string, supplied: string): boole
 export function createFormationReceipt(input: FormationReceipt): FormationReceipt | null {
   if (input.verdict !== "EQUIVALENT" || !input.transactionHash || !input.contractAddress || !input.canonicalAgreementHash || !input.evaluationInputHash || input.canonicalAgreementHash !== input.partyARatifiedHash || input.canonicalAgreementHash !== input.partyBRatifiedHash) return null;
   return { ...input };
+}
+
+export function isFormationReceiptConsistent(receipt: FormationReceipt | null, evidence: ReceiptEvidence): receipt is FormationReceipt {
+  if (!receipt) return false;
+  return receipt.verdict === "EQUIVALENT"
+    && receipt.agreementId === evidence.agreementId
+    && receipt.canonicalAgreementHash === evidence.canonicalHash
+    && receipt.canonicalAgreementHash === receipt.partyARatifiedHash
+    && receipt.canonicalAgreementHash === receipt.partyBRatifiedHash
+    && receipt.evaluationInputHash === evidence.evaluationHash
+    && receipt.evaluationInputHash === evidence.verdictHash
+    && receipt.transactionHash === evidence.transactionHash
+    && receipt.transactionHash.length > 0
+    && receipt.contractAddress === evidence.contractAddress
+    && receipt.contractAddress.length > 0
+    && receipt.network === evidence.network
+    && receipt.policyVersion === evidence.policyVersion
+    && Boolean(receipt.formedAt);
+}
+
+export function isEvaluationFinalized(input: {
+  status: string;
+  evaluationHash: string;
+  verdictHash: string;
+  transactionHash: string;
+  hashesReady: boolean;
+}): boolean {
+  return input.status === "finalized"
+    && input.hashesReady
+    && Boolean(input.transactionHash)
+    && Boolean(input.evaluationHash)
+    && input.evaluationHash === input.verdictHash;
+}
+
+export function canEvaluateCurrentInput(input: {
+  hashesReady: boolean;
+  evaluationFinalized: boolean;
+  submitting: boolean;
+  contractConfigured: boolean;
+  providerAvailable: boolean;
+  walletReady: boolean;
+  walletChainId: number | null;
+  requiredChainId: number;
+}): boolean {
+  return input.hashesReady
+    && !input.evaluationFinalized
+    && !input.submitting
+    && input.contractConfigured
+    && input.providerAvailable
+    && input.walletReady
+    && input.walletChainId === input.requiredChainId;
+}
+
+export function isEvaluationRequestCurrent(input: {
+  requestId: number;
+  currentRequestId: number;
+  requestVersion: number;
+  currentVersion: number;
+  agreementId: string;
+  currentAgreementId: string;
+  evaluationHash: string;
+  currentEvaluationHash: string;
+}): boolean {
+  return input.requestId === input.currentRequestId
+    && input.requestVersion === input.currentVersion
+    && input.agreementId === input.currentAgreementId
+    && input.evaluationHash === input.currentEvaluationHash;
 }
 
 export function deterministicConflicts(a: ObligationModel, b: ObligationModel): string[] {
