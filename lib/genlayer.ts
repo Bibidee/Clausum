@@ -33,9 +33,11 @@ function isSemanticOutcome(value: unknown): value is SemanticOutcome {
 
 export async function connectStudioDev(provider: Eip1193Provider) {
   const accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
-  const client = createClient({ chain: studioDevnet, account: accounts[0] as `0x${string}`, provider });
+  const account = accounts?.[0];
+  if (!account) throw new Error("No wallet account was returned by the connected wallet.");
+  const client = createClient({ chain: studioDevnet, account: account as `0x${string}`, provider });
   await client.connect();
-  return { client, account: accounts[0] as `0x${string}` };
+  return { client, account: account as `0x${string}` };
 }
 
 export async function submitConsensus(

@@ -50,8 +50,8 @@ Changing interpretations invalidates the previous verdict and both ratifications
 
 The previous `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` addresses are retained only as **HISTORICAL** evidence.
 Browser-local persistence and demo ratification are explicitly hackathon-only; wallet signatures and durable
-receipt storage remain post-hackathon work. The local app’s browser wallet seam requires an injected provider;
-Studio Next’s wallet is origin-scoped, so localhost wallet E2E remains a verification follow-up.
+receipt storage remain post-hackathon work. The app now uses Reown AppKit for WalletConnect-compatible wallet
+selection and exposes the connected EIP-1193 provider to the Studio-dev transaction adapter.
 
 The current production frontend is live at [clausum.vercel.app](https://clausum.vercel.app) with routes for
 `/workspace`, `/consensus`, `/ratification`, and `/receipt`. It preserves the formation provider across route
@@ -85,6 +85,7 @@ Copy `.env.example` to `.env.local`.
 | `NEXT_PUBLIC_GENLAYER_RPC_URL` | Optional | Studio-dev RPC override. |
 | `NEXT_PUBLIC_GENLAYER_CHAIN_ID` | Optional | Must be `61997` for Studio-dev. |
 | `NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS` | Required for live writes | Address produced by a verified Studio-dev deployment. |
+| `NEXT_PUBLIC_REOWN_PROJECT_ID` | Required for wallet modal | Reown AppKit project ID used for WalletConnect-compatible wallet selection. |
 
 Never place private keys, seed phrases, or wallet secrets in any environment file.
 
