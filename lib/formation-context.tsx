@@ -246,6 +246,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
           evaluationHash: "",
           canonicalHashStatus: "idle",
           evaluationHashStatus: "idle",
+          authoritativeRead: null,
           wallet: null,
           walletChainId: null,
           walletReady: false,
