@@ -8,7 +8,7 @@ deterministic comparison cannot decide whether two interpretations establish mat
 - Canonical serialization and SHA-256 hashes are generated in the browser.
 - Formation is gated by the GenLayer outcome, deterministic comparison, current evaluation input
   hash, and matching hash-bound demo ratifications.
-- The final hardened contract is deployed on Studio Next Studio-dev at `0x2a30A638456fc607D306c9617963898CdAae8BC6` (chain `61997`).
+- The legacy oracle contract is deployed on Studio Next Studio-dev at `0x2a30A638456fc607D306c9617963898CdAae8BC6` (chain `61997`). The contract-authoritative state-machine candidate is present in source but is not yet deployed.
 - Deployment transaction: [`0xd2570734…f03df`](https://explorer-studio-dev.genlayer.com/tx/0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df) (finalized).
 - Live `MATERIAL_CONFLICT` readback passed for derived input `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b` via finalized transaction [`0x4724a730…d1efd`](https://explorer-studio-dev.genlayer.com/tx/0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd).
 - Live `EQUIVALENT` readback passed for derived input `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821` via finalized transaction [`0xc8011ec0…15768`](https://explorer-studio-dev.genlayer.com/tx/0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768).
@@ -19,9 +19,10 @@ deterministic comparison cannot decide whether two interpretations establish mat
 
 ## Final verification snapshot
 
-The hardened `contracts/semantic_consensus.py` uses per-evaluation `TreeMap` storage and a new ABI
-(`agreement_id`, `input_hash`, Party A, Party B, question). Fresh deployment and both live semantic
-readbacks are complete. The two live Studio transactions finalized successfully and their readbacks match the expected outcomes.
+The deployed legacy contract uses per-evaluation `TreeMap` storage and the existing ABI
+(`agreement_id`, `input_hash`, Party A, Party B, question). The current source additionally contains
+the candidate state-machine ABI; it requires a fresh deployment and frontend migration before it can
+replace the active address.
 
 ## Hackathon limitations
 
@@ -29,7 +30,7 @@ Ratification is a browser-local demo interaction, not a cryptographic signature.
 to the active browser session. These boundaries are deliberately visible in the product and README.
 
 - Submission readiness: reviewable with a disclosed wallet signing limitation. Production tracks `main`; consult the deployment record for its current commit.
-- Contract SHA-256 (final source): `667B39596F98EBB4FFCB01426F3F5B5F9A1866518BC32E8C2AC43F8857158872`
+- Contract SHA-256 (current candidate source): `2F554AFE0667594328B12DC4E27A0D715D242FCF5B2F83EF4F100B27ABB008BE`
 - Validation environment: Python `3.12.10`, `genlayer-py` `0.19.0rc2`, `genlayer-test` `0.30.0rc2`, `genvm-linter` `0.11.1rc2`, GenVM artifact `v0.6.0-rc5`.
 - Domain tests: PASS (23/23). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
 - TypeScript: PASS

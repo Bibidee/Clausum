@@ -8,7 +8,7 @@ CLAUSUM is a semantic formation layer for autonomous agreements. It establishes 
 
 - Guided demo interpretations for two parties; independent external agent input is future work.
 - Deterministic comparison for quantities, evidence, and deadlines.
-- A GenLayer Intelligent Contract that submits disputed semantic questions to validator consensus.
+- A GenLayer Intelligent Contract that submits disputed semantic questions to validator consensus and now contains a contract-authoritative formation state-machine candidate.
 - Canonical deterministic serialization and SHA-256 hashing.
 - Hash-bound two-party ratification and a Formation Receipt.
 - Browser-session demo persistence and a Studio-dev wallet integration seam.
@@ -28,8 +28,8 @@ The `@x402/*` packages are present to satisfy transitive Reown/Coinbase wallet d
 - Network: `studio-dev`
 - Chain ID: `61997`
 - RPC: `https://studio-dev.genlayer.com/api`
-- Active contract: `0x2a30A638456fc607D306c9617963898CdAae8BC6`
-- Active source: [contracts/semantic_consensus.py](contracts/semantic_consensus.py)
+- Active deployed contract (legacy oracle ABI): `0x2a30A638456fc607D306c9617963898CdAae8BC6`
+- Candidate source (not yet deployed): [contracts/semantic_consensus.py](contracts/semantic_consensus.py)
 
 ### Verified Studio Next evidence
 
@@ -44,7 +44,9 @@ Live contract evidence for agreement `clausum-live-conflict-20260915`:
 
 ## Formation invariant and current deployment status
 
-Formation is calculated only when all of these are true: the latest GenLayer verdict is
+The deployed legacy frontend derives formation locally. The candidate contract adds an authoritative
+formation state machine; it is not yet deployed. Until that deployment occurs, formation is calculated
+only when all of these are true: the latest GenLayer verdict is
 `EQUIVALENT`, deterministic conflicts are zero, the verdict input hash matches the active
 interpretations, and Party A and Party B have demo-ratified the same canonical SHA-256 hash.
 Changing interpretations invalidates the previous verdict and both ratifications.
