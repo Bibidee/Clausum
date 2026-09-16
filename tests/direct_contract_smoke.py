@@ -93,3 +93,6 @@ with vm.activate():
         print("RATIFY_B", contract.ratify(agreement_id, canonical))
     assert contract.get_formation_state(agreement_id) == "FORMED"
     print("FORMED", contract.get_formation_state(agreement_id))
+    assert contract.get_verdict(agreement_id) == "EQUIVALENT"
+    assert contract.get_formation_receipt(agreement_id).startswith("FormationReceiptV1|")
+    print("RECEIPT", contract.get_formation_receipt(agreement_id))
