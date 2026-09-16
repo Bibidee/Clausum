@@ -98,6 +98,8 @@ class SemanticConsensus(gl.contract.Contract):
     @gl.public.write
     def submit_version(self, agreement_id: str, revision: str, party: str, commitment: str, semantic_terms: str, scope: str, evidence: str, deadline: str, quantity: str) -> str:
         self._require_negotiation(agreement_id)
+        if self.lifecycle.get(agreement_id, "DRAFT") == "FORMED":
+            raise gl.vm.UserError("formed negotiation is immutable")
         if party not in ["a", "b"]:
             raise gl.vm.UserError("invalid party slot")
         self._require_party(agreement_id, party)
@@ -124,7 +126,23 @@ class SemanticConsensus(gl.contract.Contract):
     @gl.public.write
     def revise_negotiation(self, agreement_id: str) -> str:
         self._require_negotiation(agreement_id)
+        if self.lifecycle.get(agreement_id, "DRAFT") == "FORMED":
+            raise gl.vm.UserError("formed negotiation is immutable")
         self._require_party(agreement_id, "a")
+        current = self.revisions.get(agreement_id, "1")
+        next_revision = str(int(current) + 1)
+        self.revisions.__setitem__(agreement_id, next_revision)
+        self._clear_revision_proof(agreement_id)
+        return next_revision
+
+    @gl.public.write
+    def revise_version(self, agreement_id: str, party: str) -> str:
+        self._require_negotiation(agreement_id)
+        if self.lifecycle.get(agreement_id, "DRAFT") == "FORMED":
+            raise gl.vm.UserError("formed negotiation is immutable")
+        if party not in ["a", "b"]:
+            raise gl.vm.UserError("invalid party slot")
+        self._require_party(agreement_id, party)
         current = self.revisions.get(agreement_id, "1")
         next_revision = str(int(current) + 1)
         self.revisions.__setitem__(agreement_id, next_revision)

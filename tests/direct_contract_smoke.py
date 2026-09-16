@@ -96,3 +96,7 @@ with vm.activate():
     assert contract.get_verdict(agreement_id) == "EQUIVALENT"
     assert contract.get_formation_receipt(agreement_id).startswith("FormationReceiptV1|")
     print("RECEIPT", contract.get_formation_receipt(agreement_id))
+    with vm.expect_revert("formed negotiation is immutable"):
+        contract.revise_negotiation(agreement_id)
+    with vm.expect_revert("formed negotiation is immutable"):
+        contract.submit_version(agreement_id, "1", "a", commitment_a, terms_a, **common)
