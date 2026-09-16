@@ -97,6 +97,37 @@ export interface FormationWriteReceipt {
   executionSucceeded: boolean;
 }
 
+export interface FormationContractReceipt {
+  agreementId: string;
+  revision: string;
+  canonicalAgreementHash: string;
+  evaluationInputHash: string;
+  verdict: string;
+  partyARatifiedHash: string;
+  partyBRatifiedHash: string;
+  policyVersion: string;
+}
+
+export function parseFormationContractReceipt(raw: unknown): FormationContractReceipt | null {
+  if (typeof raw !== "string" || !raw.startsWith("FormationReceiptV1|")) return null;
+  let offset = "FormationReceiptV1|".length;
+  const values: string[] = [];
+  for (let index = 0; index < 8; index += 1) {
+    const separator = raw.indexOf(":", offset);
+    if (separator < 0) return null;
+    const length = Number.parseInt(raw.slice(offset, separator), 10);
+    if (!Number.isSafeInteger(length) || length < 0) return null;
+    const start = separator + 1;
+    const value = raw.slice(start, start + length);
+    if ([...value].length !== length || start + length > raw.length) return null;
+    values.push(value);
+    offset = start + length;
+  }
+  if (offset !== raw.length) return null;
+  const [agreementId, revision, canonicalAgreementHash, evaluationInputHash, verdict, partyARatifiedHash, partyBRatifiedHash, policyVersion] = values;
+  return { agreementId, revision, canonicalAgreementHash, evaluationInputHash, verdict, partyARatifiedHash, partyBRatifiedHash, policyVersion };
+}
+
 export interface PartyVersionInput {
   agreementId: string;
   revision: string;
@@ -160,7 +191,7 @@ export async function readFormationState(provider: Eip1193Provider, contractAddr
   ]);
   const [partyA, partyB] = typeof ratifications === "string" ? ratifications.split(":", 2) : ["", ""];
   const [partyAAddress, partyBAddress] = typeof partyAddresses === "string" ? partyAddresses.split(":", 2) : ["", ""];
-  return { state: String(state), verdict: String(verdict), canonicalHash: String(canonicalHash), partyARatifiedHash: partyA, partyBRatifiedHash: partyB, partyAAddress, partyBAddress, receipt: String(receipt) };
+  return { state: String(state), verdict: String(verdict), canonicalHash: String(canonicalHash), partyARatifiedHash: partyA, partyBRatifiedHash: partyB, partyAAddress, partyBAddress, receipt: String(receipt), parsedReceipt: parseFormationContractReceipt(receipt) };
 }
 
 export async function submitConsensus(

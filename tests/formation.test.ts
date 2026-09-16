@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, stableStringify, versionCommitmentHash, versionCommitmentPayload } from "../lib/formation";
 import { amendFormationState, clearRuntime, configureDraftState, createAgreementId, initialState, ratifyFormationState, resetFormationState } from "../lib/formation-context";
 import { demoScenarios, deriveConservativeObligations } from "../lib/demo-scenarios";
-import { isStudioDevChain, parseChainId, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
+import { isStudioDevChain, parseChainId, parseFormationContractReceipt, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
 
 const base = { scope: "EU providers by revenue", evidence: "two sources", deadline: "Friday 17:00 CET", quantity: 5 };
 test("network helper verifies an already-correct chain", async () => {
@@ -110,6 +110,23 @@ test("receipt consistency rejects stale canonical, evaluation, transaction, and 
     assert.equal(isFormationReceiptConsistent(receipt, { ...evidence, [key]: "stale" }), false, `${key} must match the active runtime`);
   }
   assert.equal(isFormationReceiptConsistent(null, evidence), false);
+});
+
+test("contract FormationReceiptV1 parser validates length-prefixed evidence", () => {
+  const values = ["AG-1", "1", "a".repeat(64), "b".repeat(64), "EQUIVALENT", "a".repeat(64), "a".repeat(64), "0.1"];
+  const raw = "FormationReceiptV1|" + values.map(value => `${value.length}:${value}`).join("");
+  assert.deepEqual(parseFormationContractReceipt(raw), {
+    agreementId: "AG-1",
+    revision: "1",
+    canonicalAgreementHash: "a".repeat(64),
+    evaluationInputHash: "b".repeat(64),
+    verdict: "EQUIVALENT",
+    partyARatifiedHash: "a".repeat(64),
+    partyBRatifiedHash: "a".repeat(64),
+    policyVersion: "0.1",
+  });
+  assert.equal(parseFormationContractReceipt(`${raw}tampered`), null);
+  assert.equal(parseFormationContractReceipt("NOT_FORMED"), null);
 });
 
 test("an evaluation is finalized only for the current ready input", () => {
