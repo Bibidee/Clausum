@@ -16,7 +16,7 @@ import {
   type ObligationModel,
   type SemanticOutcome,
 } from "./formation";
-import { connectStudioDev, isStudioDevChain, readProviderChainId, studioDevConfig, submitConsensus, switchToStudioDev, type Eip1193Provider } from "./genlayer";
+import { connectStudioDev, isStudioDevChain, readFormationState, readProviderChainId, studioDevConfig, submitConsensus, switchToStudioDev, type Eip1193Provider } from "./genlayer";
 
 const QUESTION = "Do these interpretations establish materially equivalent obligations?";
 const CONTRACT = process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || "";
@@ -62,6 +62,7 @@ export interface FormationState {
   walletReady: boolean;
   ratifications: { a: string; b: string };
   receipt: FormationReceipt | null;
+  authoritativeRead: { state: string; verdict: string; canonicalHash: string; partyARatifiedHash: string; partyBRatifiedHash: string; partyAAddress: string; partyBAddress: string; receipt: string; readAt: string } | null;
   notice: string;
 }
 
@@ -86,6 +87,7 @@ interface FormationContextValue extends FormationState {
   setWalletSession: (wallet: string | null, provider: Eip1193Provider | null) => void;
   evaluate: () => Promise<void>;
   ratify: (party: "a" | "b") => void;
+  refreshAuthoritativeState: () => Promise<void>;
 }
 
 const FormationContext = createContext<FormationContextValue | null>(null);
@@ -118,6 +120,7 @@ export function initialState(agreementId = createAgreementId()): FormationState 
     walletReady: false,
     ratifications: { a: "", b: "" },
     receipt: null,
+    authoritativeRead: null,
     notice: "Agreement workspace ready.",
   };
 }
@@ -136,6 +139,7 @@ export function clearRuntime(previous: FormationState, semanticVersion = previou
     tx: "",
     ratifications: { a: "", b: "" },
     receipt: null,
+    authoritativeRead: null,
   };
 }
 
@@ -519,6 +523,20 @@ export function FormationProvider({ children }: { children: ReactNode }) {
 
   const ratify = (party: "a" | "b") => setState(previous => ratifyFormationState(previous, party, conflicts, CONTRACT, model.policyVersion));
 
+  const refreshAuthoritativeState = async () => {
+    const provider = walletProviderRef.current;
+    if (!provider || !CONTRACT || !state.agreementId) {
+      setState(previous => ({ ...previous, notice: "Connect a wallet and configure the contract before reading authoritative state." }));
+      return;
+    }
+    try {
+      const read = await readFormationState(provider, CONTRACT as `0x${string}`, state.agreementId, state.wallet ?? undefined);
+      setState(previous => ({ ...previous, authoritativeRead: { ...read, readAt: new Date().toISOString() }, notice: "Fresh contract state read completed." }));
+    } catch (error) {
+      setState(previous => ({ ...previous, notice: describeWalletError(error) }));
+    }
+  };
+
   return <FormationContext.Provider value={{
     ...state,
     partyA,
@@ -541,6 +559,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     setWalletSession,
     evaluate,
     ratify,
+    refreshAuthoritativeState,
   }}>{children}</FormationContext.Provider>;
 }
 
