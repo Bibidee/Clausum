@@ -1,8 +1,21 @@
 "use client";
+
 import Link from "next/link";
 import { ArrowRight, FilePlus2 } from "lucide-react";
 import { AgreementCard, type AgreementCardData } from "../../components/agreements/AgreementCard";
 import { ProtocolBadge } from "../../components/ui/ProtocolPrimitives";
 import { useFormation } from "../../lib/formation-context";
 
-export default function AgreementsPage() { const { agreementId, agreementTitle, partyAName, partyBName, outcome, formed, conflicts } = useFormation(); const activeStatus = formed ? "Formed" : outcome === "EQUIVALENT" ? "Ready to Ratify" : conflicts.length ? "Conflict" : "Awaiting Consensus"; const agreements: AgreementCardData[] = [{ id: agreementId, title: agreementTitle, parties: `${partyAName} ↔ ${partyBName}`, status: activeStatus, updated: "Active session", tone: formed ? "success" : conflicts.length ? "conflict" : "violet" }, { id: "AG-PROCUREMENT-042", title: "Regional procurement terms", parties: "Northstar Labs ↔ Delta Supply", status: "Formed", updated: "2 hours ago", tone: "success" }, { id: "AG-REPORT-017", title: "Quarterly market brief", parties: "Signal House ↔ Atlas Procurement", status: "Draft", updated: "Yesterday", tone: "live" }, { id: "AG-SERVICE-008", title: "Agent-to-agent service", parties: "Orbit Agent ↔ Meridian Research", status: "Awaiting Consensus", updated: "3 days ago", tone: "violet" }]; return <div className="page"><div className="page-heading"><div><ProtocolBadge tone="live">AGREEMENT LIBRARY</ProtocolBadge><h1>Meaning, organized.</h1><p>Every agreement carries its own semantic state, history, and path to formation.</p></div><Link className="button primary" href="/agreements/new"><FilePlus2 size={16} /> New agreement</Link></div><div className="library-grid">{agreements.map(agreement => <AgreementCard key={agreement.id} agreement={agreement} />)}</div><section className="panel timeline-panel"><div className="panel-kicker">ACTIVE PROTOCOL</div><h2>Formation timeline</h2><p>Follow the current agreement from negotiation to proof.</p><Link className="text-link" href="/workspace">Open active workspace <ArrowRight size={15} /></Link></section></div>; }
+export default function AgreementsPage() {
+  const { agreementId, agreementTitle, partyAName, partyBName, outcome, formed, conflicts } = useFormation();
+  const activeStatus = formed ? "Formed" : outcome === "EQUIVALENT" ? "Ready to Ratify" : conflicts.length ? "Conflict" : "Awaiting Consensus";
+  const activeAgreement: AgreementCardData = {
+    id: agreementId,
+    title: agreementTitle,
+    parties: `${partyAName} ↔ ${partyBName}`,
+    status: activeStatus,
+    updated: "Active browser session",
+    tone: formed ? "success" : conflicts.length ? "conflict" : "violet",
+  };
+  return <div className="page"><div className="page-heading"><div><ProtocolBadge tone="live">AGREEMENT LIBRARY</ProtocolBadge><h1>Meaning, organized.</h1><p>Your current browser-session agreement appears here. Durable agreement history is not yet available.</p></div><Link className="button primary" href="/agreements/new"><FilePlus2 size={16} /> New agreement</Link></div><div className="library-grid"><AgreementCard agreement={activeAgreement} /></div><section className="panel timeline-panel"><div className="panel-kicker">ACTIVE PROTOCOL</div><h2>Formation timeline</h2><p>Follow the current agreement from negotiation to proof.</p><Link className="text-link" href="/workspace">Open active workspace <ArrowRight size={15} /></Link></section></div>;
+}

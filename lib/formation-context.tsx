@@ -20,7 +20,13 @@ import { connectStudioDev, isStudioDevChain, readProviderChainId, studioDevConfi
 
 const QUESTION = "Do these interpretations establish materially equivalent obligations?";
 const CONTRACT = process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || "";
-const makeDemoId = () => `AG-${Date.now().toString(36).toUpperCase()}`;
+export function createAgreementId(randomUUID?: () => string): string {
+  const uuid = randomUUID ?? globalThis.crypto?.randomUUID?.bind(globalThis.crypto);
+  if (uuid) return `AG-${uuid().toUpperCase()}`;
+  if (!globalThis.crypto?.getRandomValues) throw new Error("Secure randomness is required for agreement IDs.");
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+  return `AG-${Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
+}
 
 export type HashStatus = "idle" | "calculating" | "ready";
 
@@ -67,14 +73,14 @@ interface FormationContextValue extends FormationState {
   connect: () => Promise<void>;
   setWalletSession: (wallet: string | null, provider: Eip1193Provider | null) => void;
   evaluate: () => Promise<void>;
-  ratify: (party: string) => void;
+  ratify: (party: "a" | "b") => void;
 }
 
 const FormationContext = createContext<FormationContextValue | null>(null);
 
-export function initialState(): FormationState {
+export function initialState(agreementId = createAgreementId()): FormationState {
   return {
-    agreementId: "AG-DEMO",
+    agreementId,
     agreementTitle: "European provider intelligence report",
     partyAName: "Atlas Procurement",
     partyBName: "Meridian Research",
@@ -120,8 +126,65 @@ export function clearRuntime(previous: FormationState, semanticVersion = previou
   };
 }
 
+export function resetFormationState(previous: FormationState): FormationState {
+  return {
+    ...initialState(),
+    wallet: previous.wallet,
+    walletChainId: previous.walletChainId,
+    walletReady: previous.walletReady,
+    semanticVersion: previous.semanticVersion + 1,
+  };
+}
+
+export function configureDraftState(previous: FormationState, draft: { title: string; partyAName: string; partyBName: string; obligations: ObligationModel }): FormationState {
+  return {
+    ...clearRuntime(previous, previous.semanticVersion + 1),
+    agreementId: createAgreementId(),
+    agreementTitle: draft.title.trim() || "Untitled agreement",
+    partyAName: draft.partyAName.trim() || "Party A",
+    partyBName: draft.partyBName.trim() || "Party B",
+    obligations: draft.obligations,
+    stage: "conflict",
+    notice: "Guided demo draft ready. Review both interpretations, then evaluate meaning.",
+  };
+}
+
+export function amendFormationState(previous: FormationState): FormationState {
+  return {
+    ...clearRuntime(previous, previous.semanticVersion + 1),
+    stage: "ready",
+    notice: "Guided demo amendment applied. Previous semantic verdict invalidated; re-evaluation is required.",
+  };
+}
+
+export function ratifyFormationState(previous: FormationState, party: "a" | "b", conflicts: string[], contract: string, policyVersion: string): FormationState {
+  const currentReady = previous.canonicalHashStatus === "ready"
+    && previous.evaluationHashStatus === "ready"
+    && canForm(previous.outcome, conflicts, previous.canonicalHash, previous.canonicalHash, previous.evaluationHash, previous.verdictHash)
+    && previous.status === "finalized"
+    && Boolean(previous.tx)
+    && previous.evaluationHash === previous.verdictHash;
+  if (!currentReady) return { ...previous, notice: "Ratification is locked until an equivalent, current GenLayer verdict is finalized." };
+  const ratifications = { ...previous.ratifications, [party]: previous.canonicalHash };
+  const receipt = ratifications.a === previous.canonicalHash && ratifications.b === previous.canonicalHash
+    ? createFormationReceipt({
+      agreementId: previous.agreementId,
+      canonicalAgreementHash: previous.canonicalHash,
+      evaluationInputHash: previous.verdictHash,
+      verdict: previous.outcome,
+      transactionHash: previous.tx,
+      contractAddress: contract,
+      network: "Studio-dev",
+      partyARatifiedHash: ratifications.a,
+      partyBRatifiedHash: ratifications.b,
+      policyVersion,
+      formedAt: previous.receipt?.formedAt ?? new Date().toISOString(),
+    }) : null;
+  return { ...previous, ratifications, receipt: receipt || previous.receipt, notice: `Party ${party.toUpperCase()} ratified the exact canonical hash.` };
+}
+
 export function FormationProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<FormationState>(() => initialState());
+  const [state, setState] = useState<FormationState>(() => initialState(""));
   const [hydrated, setHydrated] = useState(false);
   const walletProviderRef = useRef<Eip1193Provider | null>(null);
   const hashRequestRef = useRef(0);
@@ -133,7 +196,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
   }), [state.partyAName, state.partyBName, state.obligations]);
   const partyAObligations = model.obligations;
   const partyBObligations = useMemo<ObligationModel>(() => state.stage === "conflict"
-    ? { scope: model.obligations.scope, evidence: "one public source", deadline: "Friday 17:00 UTC", quantity: 5 }
+    ? { scope: model.obligations.scope, evidence: "one public source", deadline: "Friday 17:00 UTC", quantity: model.obligations.quantity }
     : model.obligations, [model, state.stage]);
   const partyA = useMemo(() => stableStringify(partyAObligations), [partyAObligations]);
   const partyB = useMemo(() => stableStringify(partyBObligations), [partyBObligations]);
@@ -148,23 +211,28 @@ export function FormationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const saved = window.sessionStorage.getItem("clausum-formation");
-    if (!saved) { setHydrated(true); return; }
+    if (!saved) { setState(initialState()); setHydrated(true); return; }
     try {
       const parsed = JSON.parse(saved) as Partial<FormationState>;
-      setState(previous => ({
-        ...previous,
-        ...parsed,
-        status: parsed.status === "submitting" ? "idle" : parsed.status ?? "idle",
-        canonicalHash: "",
-        evaluationHash: "",
-        canonicalHashStatus: "idle",
-        evaluationHashStatus: "idle",
-        wallet: null,
-        walletChainId: null,
-        walletReady: false,
-      }));
+      setState(previous => {
+        const restored = { ...previous, ...parsed } as FormationState;
+        const safe = parsed.agreementId === "AG-DEMO" || !parsed.agreementId
+          ? clearRuntime({ ...restored, agreementId: createAgreementId() }, restored.semanticVersion + 1)
+          : restored;
+        return {
+          ...safe,
+          status: safe.status === "submitting" ? "idle" : safe.status,
+          canonicalHash: "",
+          evaluationHash: "",
+          canonicalHashStatus: "idle",
+          evaluationHashStatus: "idle",
+          wallet: null,
+          walletChainId: null,
+          walletReady: false,
+        };
+      });
     } catch {
-      // Ignore malformed session state and keep the fresh demo.
+      setState(initialState());
     }
     setHydrated(true);
   }, []);
@@ -174,6 +242,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
   }, [hydrated, state]);
 
   useEffect(() => {
+    if (!hydrated || !state.agreementId) return;
     const request = ++hashRequestRef.current;
     const requestVersion = state.semanticVersion;
     setState(previous => ({
@@ -196,7 +265,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
         };
       });
     });
-  }, [input, model, state.semanticVersion]);
+  }, [hydrated, input, model, state.agreementId, state.semanticVersion]);
 
   const conflicts = useMemo(() => deterministicConflicts(partyAObligations, partyBObligations), [partyAObligations, partyBObligations]);
   const hashesReady = state.canonicalHashStatus === "ready"
@@ -245,14 +314,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       return;
     }
     evaluationRequestRef.current += 1;
-    const next = initialState();
-    setState(previous => ({
-      ...next,
-      wallet: previous.wallet,
-      walletChainId: previous.walletChainId,
-      walletReady: previous.walletReady,
-      semanticVersion: previous.semanticVersion + 1,
-    }));
+    setState(resetFormationState);
   };
 
   const configureDraft = (draft: { title: string; partyAName: string; partyBName: string; obligations: ObligationModel }) => {
@@ -261,16 +323,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       return;
     }
     evaluationRequestRef.current += 1;
-    setState(previous => ({
-      ...clearRuntime(previous, previous.semanticVersion + 1),
-      agreementId: makeDemoId(),
-      agreementTitle: draft.title.trim() || "Untitled agreement",
-      partyAName: draft.partyAName.trim() || "Party A",
-      partyBName: draft.partyBName.trim() || "Party B",
-      obligations: draft.obligations,
-      stage: "conflict",
-      notice: "Guided demo draft ready. Review both interpretations, then evaluate meaning.",
-    }));
+    setState(previous => configureDraftState(previous, draft));
   };
 
   const amend = () => {
@@ -279,11 +332,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       return;
     }
     evaluationRequestRef.current += 1;
-    setState(previous => ({
-      ...clearRuntime(previous, previous.semanticVersion + 1),
-      stage: "ready",
-      notice: "Guided demo amendment applied. Previous semantic verdict invalidated; re-evaluation is required.",
-    }));
+    setState(amendFormationState);
   };
 
   const setWalletSession = useCallback((wallet: string | null, provider: Eip1193Provider | null) => {
@@ -430,43 +479,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const ratify = (party: string) => {
-    setState(previous => {
-      const currentReady = previous.canonicalHashStatus === "ready"
-        && previous.evaluationHashStatus === "ready"
-        && canForm(previous.outcome, conflicts, previous.canonicalHash, previous.canonicalHash, previous.evaluationHash, previous.verdictHash)
-        && previous.status === "finalized"
-        && Boolean(previous.tx)
-        && previous.evaluationHash === previous.verdictHash;
-      if (!currentReady) return { ...previous, notice: "Ratification is locked until an equivalent, current GenLayer verdict is finalized." };
-      const next = party === previous.partyAName
-        ? { ...previous.ratifications, a: previous.canonicalHash }
-        : party === previous.partyBName
-          ? { ...previous.ratifications, b: previous.canonicalHash }
-          : previous.ratifications;
-      const nextReceipt = next.a === previous.canonicalHash
-        && next.b === previous.canonicalHash
-        ? createFormationReceipt({
-          agreementId: previous.agreementId,
-          canonicalAgreementHash: previous.canonicalHash,
-          evaluationInputHash: previous.verdictHash,
-          verdict: previous.outcome,
-          transactionHash: previous.tx,
-          contractAddress: CONTRACT,
-          network: "Studio-dev",
-          partyARatifiedHash: next.a,
-          partyBRatifiedHash: next.b,
-          policyVersion: model.policyVersion,
-          formedAt: previous.receipt?.formedAt ?? new Date().toISOString(),
-        }) : null;
-      return {
-        ...previous,
-        ratifications: next,
-        receipt: nextReceipt || previous.receipt,
-        notice: `${party} ratified the exact canonical hash.`,
-      };
-    });
-  };
+  const ratify = (party: "a" | "b") => setState(previous => ratifyFormationState(previous, party, conflicts, CONTRACT, model.policyVersion));
 
   return <FormationContext.Provider value={{
     ...state,

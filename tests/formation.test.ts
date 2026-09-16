@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, stableStringify } from "../lib/formation";
-import { clearRuntime, initialState } from "../lib/formation-context";
+import { amendFormationState, clearRuntime, configureDraftState, createAgreementId, initialState, ratifyFormationState, resetFormationState } from "../lib/formation-context";
+import { demoScenarios, deriveConservativeObligations } from "../lib/demo-scenarios";
 import { isStudioDevChain, parseChainId, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX } from "../lib/genlayer";
 
 const base = { scope: "EU providers by revenue", evidence: "two sources", deadline: "Friday 17:00 CET", quantity: 5 };
@@ -117,7 +118,8 @@ test("hash readiness and an exact Studio-dev wallet chain gate evaluation", () =
 });
 
 test("reset and amendment invalidation clear all prior runtime proof state", () => {
-  const previous = { ...initialState(), outcome: "EQUIVALENT" as const, status: "finalized" as const, canonicalHash: "old-canonical", evaluationHash: "old-input", canonicalHashStatus: "ready" as const, evaluationHashStatus: "ready" as const, verdictHash: "old-input", tx: "0xtx", ratifications: { a: "old-canonical", b: "old-canonical" }, receipt: createFormationReceipt({ agreementId: "AG-DEMO", canonicalAgreementHash: "old-canonical", evaluationInputHash: "old-input", verdict: "EQUIVALENT", transactionHash: "0xtx", contractAddress: "0xcontract", network: "Studio-dev", partyARatifiedHash: "old-canonical", partyBRatifiedHash: "old-canonical", policyVersion: "0.1", formedAt: "2026-01-01T00:00:00.000Z" }) };
+  const fresh = initialState();
+  const previous = { ...fresh, outcome: "EQUIVALENT" as const, status: "finalized" as const, canonicalHash: "old-canonical", evaluationHash: "old-input", canonicalHashStatus: "ready" as const, evaluationHashStatus: "ready" as const, verdictHash: "old-input", tx: "0xtx", ratifications: { a: "old-canonical", b: "old-canonical" }, receipt: createFormationReceipt({ agreementId: fresh.agreementId, canonicalAgreementHash: "old-canonical", evaluationInputHash: "old-input", verdict: "EQUIVALENT", transactionHash: "0xtx", contractAddress: "0xcontract", network: "Studio-dev", partyARatifiedHash: "old-canonical", partyBRatifiedHash: "old-canonical", policyVersion: "0.1", formedAt: "2026-01-01T00:00:00.000Z" }) };
   const amended = clearRuntime(previous, previous.semanticVersion + 1);
   for (const state of [amended, initialState()]) {
     assert.equal(state.outcome, "UNRESOLVED");
@@ -132,4 +134,46 @@ test("reset and amendment invalidation clear all prior runtime proof state", () 
     assert.notEqual(state.evaluationHashStatus, "ready");
   }
   assert.equal(amended.semanticVersion, previous.semanticVersion + 1);
+});
+
+test("fresh agreements and reset receive cryptographically generated distinct IDs", () => {
+  const first = initialState();
+  const second = initialState();
+  const reset = resetFormationState(first);
+  assert.match(first.agreementId, /^AG-[0-9A-F-]{36}$/);
+  assert.notEqual(first.agreementId, second.agreementId);
+  assert.notEqual(reset.agreementId, first.agreementId);
+  assert.notEqual(first.agreementId, "AG-DEMO");
+  assert.equal(createAgreementId(() => "test-uuid"), "AG-TEST-UUID");
+});
+
+test("amendment preserves the agreement ID while new draft creates one", () => {
+  const first = initialState();
+  const amended = amendFormationState(first);
+  assert.equal(amended.agreementId, first.agreementId);
+  assert.equal(amended.semanticVersion, first.semanticVersion + 1);
+  const draft = configureDraftState(first, { title: "New", partyAName: "A", partyBName: "B", obligations: base });
+  assert.notEqual(draft.agreementId, first.agreementId);
+  assert.equal(draft.semanticVersion, first.semanticVersion + 1);
+});
+
+test("duplicate display names still ratify independent party slots", () => {
+  const ready = { ...initialState(), partyAName: "Agent", partyBName: "Agent", outcome: "EQUIVALENT" as const, status: "finalized" as const, canonicalHash: "canonical", evaluationHash: "evaluation", canonicalHashStatus: "ready" as const, evaluationHashStatus: "ready" as const, verdictHash: "evaluation", tx: "0xtx" };
+  const onlyA = ratifyFormationState(ready, "a", [], "0xcontract", "0.1");
+  assert.deepEqual(onlyA.ratifications, { a: "canonical", b: "" });
+  assert.equal(onlyA.receipt, null);
+  assert.equal(canForm(onlyA.outcome, [], onlyA.ratifications.a, onlyA.ratifications.b, onlyA.evaluationHash, onlyA.verdictHash), false);
+  const both = ratifyFormationState(onlyA, "b", [], "0xcontract", "0.1");
+  assert.deepEqual(both.ratifications, { a: "canonical", b: "canonical" });
+  assert.ok(both.receipt);
+  assert.equal(canForm(both.outcome, [], both.ratifications.a, both.ratifications.b, both.evaluationHash, both.verdictHash), true);
+});
+
+test("structured procurement scenario keeps quantity five and exactly evidence/deadline conflicts", () => {
+  const procurement = demoScenarios.find(scenario => scenario.name === "Procurement agreement");
+  assert.ok(procurement);
+  assert.equal(procurement.obligations.quantity, 5);
+  const seller = { ...procurement.obligations, evidence: "one public source", deadline: "Friday 17:00 UTC" };
+  assert.deepEqual(deterministicConflicts(procurement.obligations, seller), ["deadline", "evidence"]);
+  assert.equal(deriveConservativeObligations(procurement.text).quantity, 1, "time must not be interpreted as quantity");
 });
