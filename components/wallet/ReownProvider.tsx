@@ -43,6 +43,7 @@ export function ReownProvider({ children }: { children: ReactNode }) {
           projectId={projectId}
           defaultNetwork={studioDevAppKitNetwork}
           customRpcUrls={customRpcUrls}
+          allowUnsupportedChain={true}
           metadata={metadata}
           features={{ analytics: false }}
         >
