@@ -91,6 +91,69 @@ export async function connectStudioDev(provider: Eip1193Provider, knownAccount?:
   return { client, account: account as `0x${string}`, chainId };
 }
 
+export interface FormationWriteReceipt {
+  transactionHash: `0x${string}`;
+  finalized: boolean;
+  executionSucceeded: boolean;
+}
+
+export interface PartyVersionInput {
+  agreementId: string;
+  revision: string;
+  party: "a" | "b";
+  commitment: string;
+  semanticTerms: string;
+  scope: string;
+  evidence: string;
+  deadline: string;
+  quantity: string;
+}
+
+type CalldataArg = string | number | bigint | boolean | null;
+
+async function writeAndFinalize(client: Awaited<ReturnType<typeof connectStudioDev>>["client"], contractAddress: `0x${string}`, functionName: string, args: CalldataArg[]): Promise<FormationWriteReceipt> {
+  const write = { address: contractAddress, functionName, args };
+  const estimate = await client.estimateTransactionFeesForWrite(write);
+  const transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
+  const receipt = await client.waitForFinalization({ hash: transactionHash as `0x${string}` & { length: 66 } });
+  if (!isSuccessful(receipt)) throw new Error(`GenLayer write failed: ${receipt.statusName} / ${receipt.txExecutionResultName}`);
+  return { transactionHash, finalized: true, executionSucceeded: true };
+}
+
+export async function createNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, partyB: `0x${string}`, policyVersion: string, knownAccount?: string): Promise<FormationWriteReceipt> {
+  const { client } = await connectStudioDev(provider, knownAccount);
+  return writeAndFinalize(client, contractAddress, "create_negotiation", [agreementId, partyB, policyVersion]);
+}
+
+export async function submitPartyVersion(provider: Eip1193Provider, contractAddress: `0x${string}`, input: PartyVersionInput, knownAccount?: string): Promise<FormationWriteReceipt> {
+  const { client } = await connectStudioDev(provider, knownAccount);
+  return writeAndFinalize(client, contractAddress, "submit_version", [input.agreementId, input.revision, input.party, input.commitment, input.semanticTerms, input.scope, input.evidence, input.deadline, input.quantity]);
+}
+
+export async function evaluateNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, revision: string, knownAccount?: string): Promise<ConsensusReceipt> {
+  const { client } = await connectStudioDev(provider, knownAccount);
+  const receipt = await writeAndFinalize(client, contractAddress, "evaluate_negotiation", [agreementId, revision]);
+  const outcome = await client.readContract({ address: contractAddress, functionName: "get_formation_state", args: [agreementId] });
+  const mapped = outcome === "READY" ? "EQUIVALENT" : outcome === "BLOCKED" ? "MATERIAL_CONFLICT" : "UNRESOLVED";
+  return { transactionHash: receipt.transactionHash, outcome: mapped, finalized: true, executionSucceeded: true };
+}
+
+export async function ratifyNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, canonicalHash: string, knownAccount?: string): Promise<FormationWriteReceipt> {
+  const { client } = await connectStudioDev(provider, knownAccount);
+  return writeAndFinalize(client, contractAddress, "ratify", [agreementId, canonicalHash]);
+}
+
+export async function readFormationState(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, knownAccount?: string) {
+  const { client } = await connectStudioDev(provider, knownAccount);
+  const [state, canonicalHash, ratifications] = await Promise.all([
+    client.readContract({ address: contractAddress, functionName: "get_formation_state", args: [agreementId] }),
+    client.readContract({ address: contractAddress, functionName: "get_canonical_hash", args: [agreementId] }),
+    client.readContract({ address: contractAddress, functionName: "get_ratifications", args: [agreementId] }),
+  ]);
+  const [partyA, partyB] = typeof ratifications === "string" ? ratifications.split(":", 2) : ["", ""];
+  return { state: String(state), canonicalHash: String(canonicalHash), partyARatifiedHash: partyA, partyBRatifiedHash: partyB };
+}
+
 export async function submitConsensus(
   provider: Eip1193Provider,
   contractAddress: `0x${string}`,

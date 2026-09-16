@@ -49,6 +49,12 @@ class SemanticConsensus(gl.contract.Contract):
     def _revision_key(self, agreement_id: str, revision: str, party: str) -> str:
         return agreement_id + ":" + revision + ":" + party
 
+    def _version_hash(self, agreement_id: str, revision: str, party: str, semantic_terms: str, scope: str, evidence: str, deadline: str, quantity: str) -> str:
+        payload = "VersionCommitmentV1|"
+        for value in [agreement_id, revision, party, scope, evidence, deadline, quantity, semantic_terms, self.policy_versions.get(agreement_id, self.POLICY_VERSION)]:
+            payload = payload + str(len(value.encode("utf-8"))) + ":" + value
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
     def _require_party(self, agreement_id: str, party: str):
         sender = gl.message.sender_address
         expected = self.party_a_addresses.get(agreement_id, Address.ZERO) if party == "a" else self.party_b_addresses.get(agreement_id, Address.ZERO)
@@ -103,6 +109,8 @@ class SemanticConsensus(gl.contract.Contract):
                 raise gl.vm.UserError("invalid version commitment")
         if len(scope) > 512 or len(evidence) > 512 or len(deadline) > 128 or len(quantity) > 32:
             raise gl.vm.UserError("hard field exceeds bounds")
+        if commitment.lower() != self._version_hash(agreement_id, revision, party, semantic_terms, scope, evidence, deadline, quantity):
+            raise gl.vm.UserError("version commitment does not match submitted terms")
         key = self._revision_key(agreement_id, revision, party)
         self.version_commitments.__setitem__(key, commitment.lower())
         self.version_terms.__setitem__(key, semantic_terms)
