@@ -195,6 +195,27 @@ class SemanticConsensus(gl.contract.Contract):
         self._require_negotiation(agreement_id)
         return self.ratified_a.get(agreement_id, "") + ":" + self.ratified_b.get(agreement_id, "")
 
+    @gl.public.view
+    def get_verdict(self, agreement_id: str) -> str:
+        self._require_negotiation(agreement_id)
+        return self.verdicts.get(agreement_id, "NOT_EVALUATED")
+
+    @gl.public.view
+    def get_party_addresses(self, agreement_id: str) -> str:
+        self._require_negotiation(agreement_id)
+        return self.party_a_addresses.get(agreement_id, Address.ZERO).as_hex + ":" + self.party_b_addresses.get(agreement_id, Address.ZERO).as_hex
+
+    @gl.public.view
+    def get_formation_receipt(self, agreement_id: str) -> str:
+        self._require_negotiation(agreement_id)
+        if self.lifecycle.get(agreement_id, "DRAFT") != "FORMED":
+            return "NOT_FORMED"
+        values = [agreement_id, self.revisions.get(agreement_id, ""), self.canonical_hashes.get(agreement_id, ""), self.evaluation_hashes.get(agreement_id, ""), self.verdicts.get(agreement_id, "NOT_EVALUATED"), self.ratified_a.get(agreement_id, ""), self.ratified_b.get(agreement_id, ""), self.policy_versions.get(agreement_id, self.POLICY_VERSION)]
+        receipt = "FormationReceiptV1|"
+        for value in values:
+            receipt = receipt + str(len(value.encode("utf-8"))) + ":" + value
+        return receipt
+
     @gl.public.write
     def evaluate(self, agreement_id: str, input_hash: str, party_a: str, party_b: str, question: str) -> str:
         if len(agreement_id) == 0 or len(agreement_id) > 128:

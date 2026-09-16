@@ -30,7 +30,7 @@ Ratification is a browser-local demo interaction, not a cryptographic signature.
 to the active browser session. These boundaries are deliberately visible in the product and README.
 
 - Submission readiness: reviewable with a disclosed wallet signing limitation. Production tracks `main`; consult the deployment record for its current commit.
-- Contract SHA-256 (current candidate source): `5BAE5833D5BDA432EE85294A9DDF36486427E69D1F86EEA6D2CC8B27AE1F7DD7`
+- Contract SHA-256 (current candidate source): `6A7353A9149CA792EB59CFAC39F2A34EDEDD99B988D14E94A2EDFEF0ECAD9BE4`
 - Validation environment: Python `3.12.10`, `genlayer-py` `0.19.0rc2`, `genlayer-test` `0.30.0rc2`, `genvm-linter` `0.11.1rc2`, GenVM artifact `v0.6.0-rc5`.
 - Domain tests: PASS (23/23). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
 - TypeScript: PASS
