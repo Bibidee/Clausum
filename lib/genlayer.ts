@@ -88,7 +88,6 @@ export async function connectStudioDev(provider: Eip1193Provider, knownAccount?:
   let chainId = await readProviderChainId(provider);
   if (!isStudioDevChain(chainId)) chainId = await switchToStudioDev(provider);
   const client = createClient({ chain: studioDevnet, account: account as `0x${string}`, provider });
-  await client.connect();
   return { client, account: account as `0x${string}`, chainId };
 }
 
