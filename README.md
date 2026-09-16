@@ -33,13 +33,13 @@ The project pins the Studio Next RC JavaScript SDK at `genlayer-js@2.0.0-rc.1` a
 ### Verified Studio Next evidence
 
 The final hardened instance was deployed and finalized on Studio Next (Studio-dev). Its deployment transaction is
-[`0xd2570734…f03df`](https://explorer-studio-next.genlayer.com/tx/0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df).
-The deployed address is [`0x2a30A638456fc607D306c9617963898CdAae8BC6`](https://explorer-studio-next.genlayer.com/address/0x2a30A638456fc607D306c9617963898CdAae8BC6).
+[`0xd2570734…f03df`](https://explorer-studio-dev.genlayer.com/tx/0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df).
+The deployed address is [`0x2a30A638456fc607D306c9617963898CdAae8BC6`](https://explorer-studio-dev.genlayer.com/address/0x2a30A638456fc607D306c9617963898CdAae8BC6).
 
 Live contract evidence for agreement `clausum-live-conflict-20260915`:
 
-- `MATERIAL_CONFLICT`: derived input hash `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b`, finalized transaction [`0x4724a730…d1efd`](https://explorer-studio-next.genlayer.com/tx/0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd); `get_outcome` read returned `MATERIAL_CONFLICT`.
-- `EQUIVALENT`: derived input hash `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821`, finalized transaction [`0xc8011ec0…15768`](https://explorer-studio-next.genlayer.com/tx/0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768); `get_outcome` read returned `EQUIVALENT`.
+- `MATERIAL_CONFLICT`: derived input hash `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b`, finalized transaction [`0x4724a730…d1efd`](https://explorer-studio-dev.genlayer.com/tx/0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd); `get_outcome` read returned `MATERIAL_CONFLICT`.
+- `EQUIVALENT`: derived input hash `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821`, finalized transaction [`0xc8011ec0…15768`](https://explorer-studio-dev.genlayer.com/tx/0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768); `get_outcome` read returned `EQUIVALENT`.
 
 ## Formation invariant and current deployment status
 
