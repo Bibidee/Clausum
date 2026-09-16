@@ -18,7 +18,7 @@ CLAUSUM is a semantic formation layer for autonomous agreements. It establishes 
 
 Negotiation → interpretations → deterministic comparison → GenLayer semantic consensus → resolution → canonical agreement → ratification → Formation Receipt.
 
-The browser never declares an agreement formed by itself. Formation is derived from successful comparison and matching canonical hashes. The GenLayer adapter estimates fees, sends the wallet-signed write, waits for finalization, and requires a successful GenVM execution result.
+In the current demo mode, the browser derives the presentation state from successful comparison and matching canonical hashes; this is explicitly not the authoritative contract formation path. The GenLayer adapter estimates fees, sends the wallet-signed write, waits for finalization, and requires a successful GenVM execution result.
 
 ## Studio Next integration
 
