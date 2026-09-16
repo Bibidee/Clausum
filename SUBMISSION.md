@@ -9,9 +9,9 @@ deterministic comparison cannot decide whether two interpretations establish mat
 - Formation is gated by the GenLayer outcome, deterministic comparison, current evaluation input
   hash, and matching hash-bound demo ratifications.
 - The final hardened contract is deployed on Studio Next Studio-dev at `0x2a30A638456fc607D306c9617963898CdAae8BC6` (chain `61997`).
-- Deployment transaction: `0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df` (finalized).
-- Live `MATERIAL_CONFLICT` readback passed for derived input `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b` via finalized transaction `0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd`.
-- Live `EQUIVALENT` readback passed for derived input `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821` via finalized transaction `0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768`.
+- Deployment transaction: [`0xd2570734…f03df`](https://explorer-studio-dev.genlayer.com/tx/0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df) (finalized).
+- Live `MATERIAL_CONFLICT` readback passed for derived input `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b` via finalized transaction [`0x4724a730…d1efd`](https://explorer-studio-dev.genlayer.com/tx/0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd).
+- Live `EQUIVALENT` readback passed for derived input `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821` via finalized transaction [`0xc8011ec0…15768`](https://explorer-studio-dev.genlayer.com/tx/0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768).
 - Vercel Production is connected to `Bibidee/Clausum`, tracks `main`, and serves the Semantic Aurora
   multi-page frontend at `https://clausum.vercel.app`.
 - Production configuration includes the fresh contract address, Studio-dev RPC (`https://studio-dev.genlayer.com/api`),
@@ -30,7 +30,7 @@ to the active browser session. These boundaries are deliberately visible in the 
 
 - Submission readiness: reviewable with a disclosed wallet signing limitation. Production tracks `main`; consult the deployment record for its current commit.
 - Contract SHA-256 (final source): `667B39596F98EBB4FFCB01426F3F5B5F9A1866518BC32E8C2AC43F8857158872`
-- Domain tests: PASS (14/14), including stale evidence, request identity, reset invalidation, hash readiness, and wallet chain gating.
+- Domain tests: PASS (18/18). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
 - TypeScript: PASS
 - Lint: PASS
 - Frontend build: PASS

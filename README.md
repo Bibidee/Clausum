@@ -11,7 +11,7 @@ CLAUSUM is a semantic formation layer for autonomous agreements. It establishes 
 - A GenLayer Intelligent Contract that submits disputed semantic questions to validator consensus.
 - Canonical deterministic serialization and SHA-256 hashing.
 - Hash-bound two-party ratification and a Formation Receipt.
-- Browser-local demo persistence and a Studio-dev wallet integration seam.
+- Browser-session demo persistence and a Studio-dev wallet integration seam.
 - A routed Semantic Aurora frontend with dedicated workspace, consensus, ratification, and receipt views.
 
 ## Architecture
@@ -50,7 +50,7 @@ interpretations, and Party A and Party B have demo-ratified the same canonical S
 Changing interpretations invalidates the previous verdict and both ratifications.
 
 The previous `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` addresses are retained only as **HISTORICAL** evidence.
-Browser-local persistence and demo ratification are explicitly hackathon-only; wallet signatures and durable
+Browser-session persistence and demo ratification are explicitly hackathon-only; independent party signatures and durable
 receipt storage remain post-hackathon work. The app now uses Reown AppKit for WalletConnect-compatible wallet
 selection and exposes the connected EIP-1193 provider to the Studio-dev transaction adapter.
 
@@ -58,7 +58,13 @@ The production frontend is live at [clausum.vercel.app](https://clausum.vercel.a
 It preserves the formation provider across routes and renders a browser-session Formation Receipt only after
 matching ratification. The `/verify` page checks local receipt consistency; it does not perform a fresh GenLayer
 readback. Transaction and contract explorer links provide network evidence. Reown AppKit's wallet selection
-modal has been verified in production; a signed wallet transaction still requires a connected wallet session.
+modal has been verified in production; a signed transaction through the production app has not been
+independently verified because no connected wallet session was available.
+
+The domain suite passes **18/18** tests. It covers canonicalization, conflict and formation rules, receipt
+consistency, hash readiness and stale-result protection, Studio-dev wallet chain gating, cryptographically
+generated agreement IDs across fresh/reset/new-draft flows, amendment identity preservation, duplicate-name
+Party A/B ratification, and the structured procurement demo's quantity and two initial conflicts.
 
 Do not substitute stable Studionet 61999. Studio-dev is resettable and is intended for RC validation.
 

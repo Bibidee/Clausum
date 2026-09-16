@@ -2,7 +2,7 @@
 
 Live frontend: [clausum.vercel.app](https://clausum.vercel.app). The guided demo starts with a Party B counter-interpretation; it is not an independently submitted external agent message.
 
-1. Open `/workspace`. Show the two deterministic differences in evidence and deadline. The evaluation hash must finish calculating before submission is available.
+1. Open `/workspace`. Show the fresh agreement ID and the two deterministic differences in evidence and deadline; quantity remains 5 for both parties. The evaluation hash must finish calculating before submission is available.
 2. Open `/consensus`. Connect a wallet through Reown and confirm Studio-dev chain `61997`. The app checks the provider's `eth_chainId` before allowing a write.
 3. Evaluate the conflicting interpretations. The app estimates fees, submits the contract write, waits for finalization, checks successful execution, and reads `get_outcome`. A `MATERIAL_CONFLICT` verdict blocks ratification.
 4. Apply the **demo amendment**. Show that the previous verdict, transaction, ratifications, and hashes are invalidated while the fresh input hash is calculated.
