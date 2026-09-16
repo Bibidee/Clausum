@@ -25,7 +25,7 @@ export default function RootLayout({
       <body className="antialiased">
         <script
           dangerouslySetInnerHTML={{
-            __html: `(() => { try { const saved = localStorage.getItem("clausum-theme"); const theme = saved === "light" || saved === "dark" ? saved : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); document.documentElement.dataset.theme = theme; } catch (_) {} })();`,
+            __html: `(() => { try { const saved = localStorage.getItem("clausum-theme"); const theme = saved === "light" ? "light" : saved === "dark" ? "dark" : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); document.documentElement.dataset.theme = theme; } catch (_) {} })();`,
           }}
         />
         <AppShell>{children}</AppShell>

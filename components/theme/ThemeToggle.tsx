@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Laptop, Moon, Sun } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
-export function ThemeToggle() { const { theme, toggleTheme } = useTheme(); return <button className="icon-button theme-toggle" type="button" onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title={`Switch to ${theme === "dark" ? "Luminous Paper" : "Midnight Aurora"}`}>{theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}</button>; }
+export function ThemeToggle() { const { theme, resolvedTheme, toggleTheme } = useTheme(); const next = theme === "dark" ? "Luminous Paper" : theme === "light" ? "System theme" : "Midnight Aurora"; return <button className="icon-button theme-toggle" type="button" onClick={toggleTheme} aria-label={`Switch to ${next}`} title={`Theme: ${theme === "system" ? `System (${resolvedTheme})` : theme}. Next: ${next}`}><span className="theme-icon" aria-hidden="true">{theme === "system" ? <Laptop size={15} /> : resolvedTheme === "dark" ? <Sun size={15} /> : <Moon size={15} />}</span></button>; }
