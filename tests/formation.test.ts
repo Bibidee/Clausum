@@ -152,7 +152,7 @@ test("hash readiness and an exact Studio-dev wallet chain gate evaluation", () =
 
 test("reset and amendment invalidation clear all prior runtime proof state", () => {
   const fresh = initialState();
-  const previous = { ...fresh, outcome: "EQUIVALENT" as const, status: "finalized" as const, canonicalHash: "old-canonical", evaluationHash: "old-input", canonicalHashStatus: "ready" as const, evaluationHashStatus: "ready" as const, verdictHash: "old-input", tx: "0xtx", ratifications: { a: "old-canonical", b: "old-canonical" }, receipt: createFormationReceipt({ agreementId: fresh.agreementId, canonicalAgreementHash: "old-canonical", evaluationInputHash: "old-input", verdict: "EQUIVALENT", transactionHash: "0xtx", contractAddress: "0xcontract", network: "Studio-dev", partyARatifiedHash: "old-canonical", partyBRatifiedHash: "old-canonical", policyVersion: "0.1", formedAt: "2026-01-01T00:00:00.000Z" }) };
+  const previous = { ...fresh, outcome: "EQUIVALENT" as const, status: "finalized" as const, canonicalHash: "old-canonical", evaluationHash: "old-input", canonicalHashStatus: "ready" as const, evaluationHashStatus: "ready" as const, verdictHash: "old-input", tx: "0xtx", ratifications: { a: "old-canonical", b: "old-canonical" }, authoritativeRead: { state: "FORMED", verdict: "EQUIVALENT", canonicalHash: "old-canonical", partyARatifiedHash: "old-canonical", partyBRatifiedHash: "old-canonical", partyAAddress: "0xa", partyBAddress: "0xb", receipt: "FormationReceiptV1|", readAt: "2026-01-01T00:00:00.000Z" }, receipt: createFormationReceipt({ agreementId: fresh.agreementId, canonicalAgreementHash: "old-canonical", evaluationInputHash: "old-input", verdict: "EQUIVALENT", transactionHash: "0xtx", contractAddress: "0xcontract", network: "Studio-dev", partyARatifiedHash: "old-canonical", partyBRatifiedHash: "old-canonical", policyVersion: "0.1", formedAt: "2026-01-01T00:00:00.000Z" }) };
   const amended = clearRuntime(previous, previous.semanticVersion + 1);
   for (const state of [amended, initialState()]) {
     assert.equal(state.outcome, "UNRESOLVED");
@@ -163,6 +163,7 @@ test("reset and amendment invalidation clear all prior runtime proof state", () 
     assert.equal(state.tx, "");
     assert.deepEqual(state.ratifications, { a: "", b: "" });
     assert.equal(state.receipt, null);
+    assert.equal(state.authoritativeRead, null);
     assert.notEqual(state.canonicalHashStatus, "ready");
     assert.notEqual(state.evaluationHashStatus, "ready");
   }
