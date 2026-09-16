@@ -76,6 +76,7 @@ Do not substitute stable Studionet 61999. Studio-dev is resettable and is intend
 pnpm install
 pnpm run dev
 pnpm run test:domain
+pnpm run test:contract
 ```
 
 To validate the deployed contract toolchain:
