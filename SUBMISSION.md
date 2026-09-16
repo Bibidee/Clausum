@@ -30,11 +30,12 @@ to the active browser session. These boundaries are deliberately visible in the 
 
 - Submission readiness: reviewable with a disclosed wallet signing limitation. Production tracks `main`; consult the deployment record for its current commit.
 - Contract SHA-256 (final source): `667B39596F98EBB4FFCB01426F3F5B5F9A1866518BC32E8C2AC43F8857158872`
+- Validation environment: Python `3.12.10`, `genlayer-py` `0.19.0rc2`, `genlayer-test` `0.30.0rc2`, `genvm-linter` `0.11.1rc2`, GenVM artifact `v0.6.0-rc5`.
 - Domain tests: PASS (23/23). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
 - TypeScript: PASS
 - Lint: PASS
 - Frontend build: PASS
-- GenLayer check/validate/typecheck: PASS (zero diagnostics)
+- GenLayer check/validate/typecheck: PASS (zero diagnostics; cached GenVM artifact `v0.6.0-rc5`)
 - Reown modal and supported wallet options: verified on the production origin.
 - EIP-1193 provider bridge into the GenLayer adapter: implemented; the provider's `eth_chainId` is checked against Studio-dev `61997` before a write.
 - Connected account, disconnect/reconnect, network switching, and a signed app transaction: **not verified** because no wallet session/provider was available in the browser environment.

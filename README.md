@@ -22,7 +22,7 @@ The browser never declares an agreement formed by itself. Formation is derived f
 
 ## Studio Next integration
 
-The project pins the Studio Next RC JavaScript SDK at `genlayer-js@2.0.0-rc.1` and the CLI at `genlayer@0.40.0-rc.3`.
+The project pins the Studio Next RC JavaScript SDK at `genlayer-js@2.0.0-rc.1` and the CLI at `genlayer@0.40.0-rc.3`. Contract validation uses Python `3.12`, `genlayer-py@0.19.0rc2`, `genlayer-test@0.30.0rc2`, and `genvm-linter@0.11.1rc2` against the cached GenVM `v0.6.0-rc5` artifact.
 The `@x402/*` packages are present to satisfy transitive Reown/Coinbase wallet dependency resolution during production builds; CLAUSUM does not expose x402 as an application feature.
 
 - Network: `studio-dev`
