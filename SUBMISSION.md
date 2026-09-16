@@ -14,8 +14,8 @@ equivalent.
 - Live `MATERIAL_CONFLICT` readback passed for derived input `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b` via finalized transaction `0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd`.
 - Live `EQUIVALENT` readback passed for derived input `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821` via finalized transaction `0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768`.
 - Vercel Production is connected to `Bibidee/Clausum`, tracks `main`, and serves the Semantic Aurora
-  multi-page frontend at `https://clausum.vercel.app` from deployment `dpl_3t5SEkSU9Gvy5Xyy8EMpyV1XXMw1`
-  (commit `db48e35590f2d9f4b1b486d9b853cfd0103252c1`).
+  multi-page frontend at `https://clausum.vercel.app` from the pushed source commit
+  `33a186a291620da7789a90fc7021dc0b7776bfea`.
 - Production configuration includes the fresh contract address, Studio-dev RPC (`https://studio-dev.genlayer.com/api`),
   chain `61997`, and `NEXT_PUBLIC_CLAUSUM_MODE=demo`.
 
