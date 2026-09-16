@@ -1,6 +1,6 @@
 import { createClient, isSuccessful } from "genlayer-js";
 import { studioDevnet } from "genlayer-js/chains";
-import type { SemanticOutcome } from "./formation";
+import { versionCommitmentHash, type SemanticOutcome } from "./formation";
 
 export const studioDevConfig = {
   chainId: 61997,
@@ -128,6 +128,11 @@ export async function createNegotiation(provider: Eip1193Provider, contractAddre
 export async function submitPartyVersion(provider: Eip1193Provider, contractAddress: `0x${string}`, input: PartyVersionInput, knownAccount?: string): Promise<FormationWriteReceipt> {
   const { client } = await connectStudioDev(provider, knownAccount);
   return writeAndFinalize(client, contractAddress, "submit_version", [input.agreementId, input.revision, input.party, input.commitment, input.semanticTerms, input.scope, input.evidence, input.deadline, input.quantity]);
+}
+
+export async function submitPartyVersionFromTerms(provider: Eip1193Provider, contractAddress: `0x${string}`, input: Omit<PartyVersionInput, "commitment">, knownAccount?: string): Promise<FormationWriteReceipt> {
+  const commitment = await versionCommitmentHash({ ...input, policyVersion: "0.1" });
+  return submitPartyVersion(provider, contractAddress, { ...input, commitment }, knownAccount);
 }
 
 export async function evaluateNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, revision: string, knownAccount?: string): Promise<ConsensusReceipt> {
