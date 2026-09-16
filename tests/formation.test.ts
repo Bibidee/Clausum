@@ -185,7 +185,7 @@ test("amendment preserves the agreement ID while new draft creates one", () => {
   const amended = amendFormationState(first);
   assert.equal(amended.agreementId, first.agreementId);
   assert.equal(amended.semanticVersion, first.semanticVersion + 1);
-  const draft = configureDraftState(first, { title: "New", partyAName: "A", partyBName: "B", obligations: base });
+  const draft = configureDraftState(first, { title: "New", partyAName: "A", partyBName: "B", partyBAddress: "", obligations: base });
   assert.notEqual(draft.agreementId, first.agreementId);
   assert.equal(draft.semanticVersion, first.semanticVersion + 1);
 });

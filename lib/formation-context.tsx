@@ -45,6 +45,7 @@ export interface FormationState {
   agreementTitle: string;
   partyAName: string;
   partyBName: string;
+  partyBAddress: string;
   obligations: ObligationModel;
   stage: "conflict" | "ready";
   outcome: SemanticOutcome;
@@ -78,7 +79,7 @@ interface FormationContextValue extends FormationState {
   life: string;
   model: { parties: string[]; obligations: ObligationModel; policyVersion: string };
   reset: () => void;
-  configureDraft: (draft: { title: string; partyAName: string; partyBName: string; obligations: ObligationModel }) => void;
+  configureDraft: (draft: { title: string; partyAName: string; partyBName: string; partyBAddress: string; obligations: ObligationModel }) => void;
   amend: () => void;
   connect: () => Promise<void>;
   switchNetwork: () => Promise<void>;
@@ -95,6 +96,7 @@ export function initialState(agreementId = createAgreementId()): FormationState 
     agreementTitle: "European provider intelligence report",
     partyAName: "Atlas Procurement",
     partyBName: "Meridian Research",
+    partyBAddress: "",
     obligations: {
       scope: "five largest EU providers by revenue",
       evidence: "two independent public sources",
@@ -147,13 +149,14 @@ export function resetFormationState(previous: FormationState): FormationState {
   };
 }
 
-export function configureDraftState(previous: FormationState, draft: { title: string; partyAName: string; partyBName: string; obligations: ObligationModel }): FormationState {
+export function configureDraftState(previous: FormationState, draft: { title: string; partyAName: string; partyBName: string; partyBAddress: string; obligations: ObligationModel }): FormationState {
   return {
     ...clearRuntime(previous, previous.semanticVersion + 1),
     agreementId: createAgreementId(),
     agreementTitle: draft.title.trim() || "Untitled agreement",
     partyAName: draft.partyAName.trim() || "Party A",
     partyBName: draft.partyBName.trim() || "Party B",
+    partyBAddress: draft.partyBAddress.trim(),
     obligations: draft.obligations,
     stage: "conflict",
     notice: "Guided demo draft ready. Review both interpretations, then evaluate meaning.",
@@ -233,6 +236,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
           : restored;
         return {
           ...safe,
+          partyBAddress: typeof safe.partyBAddress === "string" ? safe.partyBAddress : "",
           status: safe.status === "submitting" ? "idle" : safe.status,
           canonicalHash: "",
           evaluationHash: "",
@@ -329,7 +333,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     setState(resetFormationState);
   };
 
-  const configureDraft = (draft: { title: string; partyAName: string; partyBName: string; obligations: ObligationModel }) => {
+  const configureDraft = (draft: { title: string; partyAName: string; partyBName: string; partyBAddress: string; obligations: ObligationModel }) => {
     if (state.status === "submitting") {
       setState(previous => ({ ...previous, notice: "Wait for the current semantic evaluation to finish." }));
       return;
