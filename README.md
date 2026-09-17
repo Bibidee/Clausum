@@ -65,7 +65,7 @@ separates that evidence from local receipt matching. Transaction and contract ex
 evidence. Reown AppKit's wallet selection modal has been verified in production; a signed transaction through the
 production app has not been independently verified because no connected wallet session was available.
 
-The domain suite passes **25/25** tests. It covers canonicalization, conflict and formation rules, receipt
+The domain suite passes **26/26** tests. It covers canonicalization, conflict and formation rules, receipt
 consistency, hash readiness and stale-result protection, Studio-dev wallet chain gating, cryptographically
 generated agreement IDs across fresh/reset/new-draft flows, amendment identity preservation, duplicate-name
 Party A/B ratification, and the structured procurement demo's quantity and two initial conflicts.

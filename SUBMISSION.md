@@ -33,7 +33,7 @@ eligibility come from the Intelligent Contract. Reown wallet signing remains the
 - Submission readiness: reviewable with a disclosed wallet signing limitation. Production tracks `main`; consult the deployment record for its current commit.
 - Contract SHA-256 (deployed source): `06D631EAC02730A17B18A4B2ED88FAF868633DDF46BADB71F2D5D1DECD8705DB`
 - Validation environment: Python `3.12.10`, `genlayer-py` `0.19.0rc2`, `genlayer-test` `0.30.0rc2`, `genvm-linter` `0.11.1rc2`, GenVM artifact `v0.6.0-rc5`.
-- Domain tests: PASS (25/25). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
+- Domain tests: PASS (26/26). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
 - TypeScript: PASS
 - Lint: PASS
 - Frontend build: PASS
