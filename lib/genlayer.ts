@@ -82,8 +82,12 @@ function isSemanticOutcome(value: unknown): value is SemanticOutcome {
 }
 
 export async function connectStudioDev(provider: Eip1193Provider, knownAccount?: string) {
-  const accounts = knownAccount ? [knownAccount] : await provider.request({ method: "eth_requestAccounts" }) as string[];
-  const account = accounts?.[0];
+  // Always read the wallet's current account before a write. Reown/AppKit can
+  // restore or switch accounts between route changes; trusting a cached
+  // address would make the provider reject an otherwise valid transaction.
+  let accounts = await provider.request({ method: "eth_accounts" }) as string[];
+  if (!accounts?.length) accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
+  const account = accounts?.[0] ?? knownAccount;
   if (!account) throw new Error("No wallet account was returned by the connected wallet.");
   let chainId = await readProviderChainId(provider);
   if (!isStudioDevChain(chainId)) chainId = await switchToStudioDev(provider);

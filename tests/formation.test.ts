@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, stableStringify, versionCommitmentHash, versionCommitmentPayload } from "../lib/formation";
 import { amendFormationState, clearRuntime, configureDraftState, createAgreementId, initialState, ratifyFormationState, resetFormationState } from "../lib/formation-context";
 import { demoScenarios, deriveConservativeObligations } from "../lib/demo-scenarios";
-import { isStudioDevChain, parseChainId, parseFormationContractReceipt, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
+import { connectStudioDev, isStudioDevChain, parseChainId, parseFormationContractReceipt, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
 
 const base = { scope: "EU providers by revenue", evidence: "two sources", deadline: "Friday 17:00 CET", quantity: 5 };
 test("network helper verifies an already-correct chain", async () => {
@@ -30,6 +30,14 @@ test("network helper surfaces a rejected add-chain request", async () => {
   let first = true;
   const provider = { request: async ({ method }: { method: string }) => { if (method === "wallet_switchEthereumChain" && first) { first = false; throw { code: 4902 }; } throw { code: 4001 }; } };
   await assert.rejects(() => switchToStudioDev(provider), /cancelled/);
+});
+test("wallet adapter uses the provider's current account after switching", async () => {
+  const current = "0xCa360741DC1AdB32BAeB1d338730098c6EDd2a54";
+  const calls: string[] = [];
+  const provider = { request: async ({ method }: { method: string }) => { calls.push(method); return method === "eth_accounts" ? [current] : "0xf22d"; } };
+  const result = await connectStudioDev(provider, "0xFb67de8f364B97cFDFef45AdAfA6A7739aE572F2");
+  assert.equal(result.account, current);
+  assert.deepEqual(calls, ["eth_accounts", "eth_chainId"]);
 });
 test("canonicalization makes equivalent objects hash equally", async () => {
   const first = { parties: ["A", "B"], obligations: base, policyVersion: "0.1" } as const;
