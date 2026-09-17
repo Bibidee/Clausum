@@ -16,6 +16,7 @@ deterministic comparison cannot decide whether two interpretations establish mat
   multi-page frontend at `https://clausum.vercel.app`.
 - Production configuration includes the fresh contract address, Studio-dev RPC (`https://studio-dev.genlayer.com/api`),
   chain `61997`, and `NEXT_PUBLIC_CLAUSUM_MODE=demo`.
+- Contract mode is now implemented in the routed frontend: Party A creates the negotiation and commits its version, Party B commits from the authorized wallet, evaluation calls `evaluate_negotiation`, and ratification calls the contract from the matching party wallet. `demo` remains an explicitly labelled offline rehearsal mode.
 - Fresh deployment transaction: [`0x1baee97d…1a5e5`](https://explorer-studio-dev.genlayer.com/tx/0x1baee97d1bd4d6e15ba2509be58cda8429decd1afea7f5447283f6c90de1a5e5). Final live lifecycle `AG-LIVE-934844` is recorded in `artifacts/live-e2e.studio-dev.json`: `MATERIAL_CONFLICT`, amendment `EQUIVALENT`, independent A/B ratification, and `FORMED` receipt readback.
 
 ## Final verification snapshot
