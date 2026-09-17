@@ -5,34 +5,33 @@ deterministic comparison cannot decide whether two interpretations establish mat
 
 ## What is real today
 
-- Canonical serialization and SHA-256 hashes are generated in the browser.
-- Formation is gated by the GenLayer outcome, deterministic comparison, current evaluation input
-  hash, and matching hash-bound demo ratifications.
+- Canonical serialization and SHA-256 commitments are generated deterministically and checked by the contract.
+- Formation is gated by the GenLayer outcome, authoritative deterministic comparison, current evaluation input
+  hash, and matching onchain ratifications from the two authorized party addresses.
 - The contract-authoritative state-machine is deployed on Studio Next Studio-dev at `0xcEec0403675761E938c16995Df6f835A701D44ec` (chain `61997`). The prior `0x2a30A638456fc607D306c9617963898CdAae8BC6` remains **HISTORICAL**.
-- Deployment transaction: [`0xd2570734…f03df`](https://explorer-studio-dev.genlayer.com/tx/0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df) (finalized).
+- Deployment transaction: [`0x1baee97d…1a5e5`](https://explorer-studio-dev.genlayer.com/tx/0x1baee97d1bd4d6e15ba2509be58cda8429decd1afea7f5447283f6c90de1a5e5) (finalized).
 - Live `MATERIAL_CONFLICT` readback passed for derived input `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b` via finalized transaction [`0x4724a730…d1efd`](https://explorer-studio-dev.genlayer.com/tx/0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd).
 - Live `EQUIVALENT` readback passed for derived input `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821` via finalized transaction [`0xc8011ec0…15768`](https://explorer-studio-dev.genlayer.com/tx/0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768).
 - Vercel Production is connected to `Bibidee/Clausum`, tracks `main`, and serves the Semantic Aurora
   multi-page frontend at `https://clausum.vercel.app`.
 - Production configuration includes the fresh contract address, Studio-dev RPC (`https://studio-dev.genlayer.com/api`),
-  chain `61997`, and `NEXT_PUBLIC_CLAUSUM_MODE=demo`.
+  chain `61997`, `NEXT_PUBLIC_CLAUSUM_MODE=contract`, and the verified Reown project configuration.
 - Contract mode is now implemented in the routed frontend: Party A creates the negotiation and commits its version, Party B commits from the authorized wallet, evaluation calls `evaluate_negotiation`, and ratification calls the contract from the matching party wallet. `demo` remains an explicitly labelled offline rehearsal mode.
 - Fresh deployment transaction: [`0x1baee97d…1a5e5`](https://explorer-studio-dev.genlayer.com/tx/0x1baee97d1bd4d6e15ba2509be58cda8429decd1afea7f5447283f6c90de1a5e5). Final live lifecycle `AG-LIVE-934844` is recorded in `artifacts/live-e2e.studio-dev.json`: `MATERIAL_CONFLICT`, amendment `EQUIVALENT`, independent A/B ratification, and `FORMED` receipt readback.
 
 ## Final verification snapshot
 
-The deployed legacy contract uses per-evaluation `TreeMap` storage and the existing ABI
-(`agreement_id`, `input_hash`, Party A, Party B, question). The current source additionally contains
-the candidate state-machine ABI; it requires a fresh deployment and frontend migration before it can
-replace the active address.
+The fresh deployed contract is the active contract-authoritative state machine. It uses bounded TreeMap storage,
+independent party addresses and version commitments, deterministic hard-field gating, revision invalidation,
+GenLayer outcomes, onchain ratification, and a contract-readable Formation Receipt.
 
 ## Hackathon limitations
 
-Ratification is a browser-local demo interaction, not a cryptographic signature. Receipts are local
-to the active browser session. These boundaries are deliberately visible in the product and README.
+The browser still keeps a convenience copy of the receipt for navigation, but formation authority and receipt
+eligibility come from the Intelligent Contract. Reown wallet signing remains the required user action for writes.
 
 - Submission readiness: reviewable with a disclosed wallet signing limitation. Production tracks `main`; consult the deployment record for its current commit.
-- Contract SHA-256 (deployed source): `A964998CAB38BB656013A7145BA0ECAD252721934E9E80D35891E602D10AEE8F`
+- Contract SHA-256 (deployed source): `06D631EAC02730A17B18A4B2ED88FAF868633DDF46BADB71F2D5D1DECD8705DB`
 - Validation environment: Python `3.12.10`, `genlayer-py` `0.19.0rc2`, `genlayer-test` `0.30.0rc2`, `genvm-linter` `0.11.1rc2`, GenVM artifact `v0.6.0-rc5`.
 - Domain tests: PASS (25/25). Coverage includes unique fresh/reset/new-draft agreement IDs, amendment ID preservation, duplicate-name independent ratification, procurement quantity 5 with only evidence/deadline conflicts, stale evidence and async-result protection, hash readiness, wallet chain gating, and receipt consistency.
 - TypeScript: PASS
@@ -45,6 +44,6 @@ to the active browser session. These boundaries are deliberately visible in the 
 - EIP-1193 provider bridge into the GenLayer adapter: implemented; the provider's `eth_chainId` is checked against Studio-dev `61997` before a write.
 - Connected account, disconnect/reconnect, network switching, and a signed app transaction: **not verified** because no wallet session/provider was available in the browser environment.
 - Studio Run & Debug deployment, live writes, finalization, and `get_outcome` readbacks: verified with the transactions above.
-- Browser receipt: issued from current finalized transaction, canonical hash, evaluation hash, and both local ratifications. It is not a cryptographic signature. `/verify` checks local session consistency, not a fresh on-chain read.
+- Browser receipt: rendered from the current finalized transaction, canonical hash, evaluation hash, and both contract ratifications. `/verify` supports a fresh contract readback and labels local receipt matching separately.
 
 Historical addresses `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` remain labelled **HISTORICAL**.

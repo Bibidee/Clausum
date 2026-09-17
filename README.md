@@ -6,12 +6,12 @@ CLAUSUM is a semantic formation layer for autonomous agreements. It establishes 
 
 ## What is built
 
-- Guided demo interpretations for two parties; independent external agent input is future work.
+- Two independently authored Party A / Party B representations, committed by their authorized wallets.
 - Deterministic comparison for quantities, evidence, and deadlines.
 - A GenLayer Intelligent Contract that submits disputed semantic questions to validator consensus and now contains a contract-authoritative formation state-machine candidate.
 - Canonical deterministic serialization and SHA-256 hashing.
 - Hash-bound two-party ratification and a Formation Receipt.
-- Browser-session demo persistence and a Studio-dev wallet integration seam.
+- Reown injected-wallet flow into the Studio-dev transaction adapter; browser storage is convenience state only.
 - A routed Semantic Aurora frontend with dedicated workspace, consensus, ratification, and receipt views.
 
 ## Architecture
@@ -53,18 +53,19 @@ interpretations, and Party A and Party B have independently ratified the same ca
 Changing interpretations invalidates the previous verdict and both ratifications.
 
 The previous `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` addresses are retained only as **HISTORICAL** evidence.
-Browser-session persistence and demo ratification are explicitly hackathon-only; independent party signatures and durable
-receipt storage remain post-hackathon work. The app now uses Reown AppKit for WalletConnect-compatible wallet
-selection and exposes the connected EIP-1193 provider to the Studio-dev transaction adapter.
+Browser storage is retained only for UI convenience. Contract mode performs negotiation creation, independent
+version commits, evaluation, ratification, formation, and receipt reads against the deployed Intelligent Contract.
+The labelled `demo` mode remains available only for offline UI rehearsal and is never submission evidence. The app
+uses Reown AppKit to select an injected EIP-1193 wallet and exposes that provider to the Studio-dev transaction adapter.
 
 The production frontend is live at [clausum.vercel.app](https://clausum.vercel.app) and tracks the `main` branch.
-It preserves the formation provider across routes and renders a browser-session Formation Receipt only after
-matching ratification. The `/verify` page checks local receipt consistency; it does not perform a fresh GenLayer
-readback. Transaction and contract explorer links provide network evidence. Reown AppKit's wallet selection
-modal has been verified in production; a signed transaction through the production app has not been
-independently verified because no connected wallet session was available.
+It preserves the formation provider across routes and renders a contract-backed Formation Receipt only after
+matching onchain ratification. The `/verify` page can perform a fresh Intelligent Contract readback and clearly
+separates that evidence from local receipt matching. Transaction and contract explorer links provide network
+evidence. Reown AppKit's wallet selection modal has been verified in production; a signed transaction through the
+production app has not been independently verified because no connected wallet session was available.
 
-The domain suite passes **23/23** tests. It covers canonicalization, conflict and formation rules, receipt
+The domain suite passes **25/25** tests. It covers canonicalization, conflict and formation rules, receipt
 consistency, hash readiness and stale-result protection, Studio-dev wallet chain gating, cryptographically
 generated agreement IDs across fresh/reset/new-draft flows, amendment identity preservation, duplicate-name
 Party A/B ratification, and the structured procurement demo's quantity and two initial conflicts.
