@@ -387,6 +387,12 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     if (CONTRACT_MODE) {
       const provider = walletProviderRef.current;
       if (!provider || !state.wallet || !state.walletReady) { setState(previous => ({ ...previous, notice: "Connect Party A's Studio-dev wallet before amending." })); return; }
+      const partyAAddress = state.authoritativeRead?.partyAAddress;
+      if ((partyAAddress && state.wallet.toLowerCase() !== partyAAddress.toLowerCase())
+        || (!partyAAddress && state.wallet.toLowerCase() === state.partyBAddress.toLowerCase())) {
+        setState(previous => ({ ...previous, notice: "Connect Party A's authorized Studio-dev wallet before amending." }));
+        return;
+      }
       try {
         await reviseNegotiation(provider, CONTRACT as `0x${string}`, state.agreementId, state.wallet);
         setState(amendFormationState);
