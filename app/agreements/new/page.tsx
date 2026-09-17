@@ -6,19 +6,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFormation } from "../../../lib/formation-context";
 import type { ObligationModel } from "../../../lib/formation";
-import { demoScenarios, deriveConservativeObligations, type DemoScenario } from "../../../lib/demo-scenarios";
+import { demoScenarios, type DemoScenario } from "../../../lib/demo-scenarios";
 import { ProtocolBadge } from "../../../components/ui/ProtocolPrimitives";
 
 export default function NewAgreementPage() {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [partyBText, setPartyBText] = useState("");
-  const [a, setA] = useState("Atlas Procurement");
-  const [b, setB] = useState("Meridian Research");
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
   const [bAddress, setBAddress] = useState("");
   const [selectedScenario, setSelectedScenario] = useState<DemoScenario | null>(null);
-  const [obligations, setObligations] = useState<ObligationModel>(() => deriveConservativeObligations(""));
-  const [partyBObligations, setPartyBObligations] = useState<ObligationModel>(() => deriveConservativeObligations(""));
+  const [obligations, setObligations] = useState<ObligationModel>({ scope: "", evidence: "", deadline: "", quantity: 0 });
+  const [partyBObligations, setPartyBObligations] = useState<ObligationModel>({ scope: "", evidence: "", deadline: "", quantity: 0 });
   const router = useRouter();
   const { configureDraft, status } = useFormation();
   const submitting = status === "submitting";
@@ -63,11 +63,11 @@ export default function NewAgreementPage() {
           </div>
           <div className="form-field">
             <label htmlFor="party-a">PARTY A</label>
-            <input id="party-a" value={a} onChange={event => setA(event.target.value)} />
+            <input id="party-a" value={a} onChange={event => setA(event.target.value)} placeholder="e.g. Atlas Procurement" required />
           </div>
           <div className="form-field">
             <label htmlFor="party-b">PARTY B</label>
-            <input id="party-b" value={b} onChange={event => setB(event.target.value)} />
+            <input id="party-b" value={b} onChange={event => setB(event.target.value)} placeholder="e.g. Meridian Research" required />
           </div>
           <div className="form-field">
             <label htmlFor="party-b-address">PARTY B WALLET ADDRESS</label>
@@ -89,7 +89,6 @@ export default function NewAgreementPage() {
               onChange={event => {
                 setText(event.target.value);
                 setSelectedScenario(null);
-                setObligations(deriveConservativeObligations(event.target.value));
               }}
               placeholder="Describe the obligations both parties should understand…"
               required
@@ -112,19 +111,19 @@ export default function NewAgreementPage() {
             <div className="structured-grid">
               <div className="form-field">
                 <label htmlFor="scope">SCOPE</label>
-                <input id="scope" value={obligations.scope} onChange={event => setObligations(current => ({ ...current, scope: event.target.value }))} required />
+                <input id="scope" value={obligations.scope} onChange={event => setObligations(current => ({ ...current, scope: event.target.value }))} placeholder="e.g. 12 critical API endpoints" required />
               </div>
               <div className="form-field">
                 <label htmlFor="evidence">EVIDENCE</label>
-                <input id="evidence" value={obligations.evidence} onChange={event => setObligations(current => ({ ...current, evidence: event.target.value }))} required />
+                <input id="evidence" value={obligations.evidence} onChange={event => setObligations(current => ({ ...current, evidence: event.target.value }))} placeholder="e.g. two independent penetration-test reports" required />
               </div>
               <div className="form-field">
                 <label htmlFor="deadline">DEADLINE</label>
-                <input id="deadline" value={obligations.deadline} onChange={event => setObligations(current => ({ ...current, deadline: event.target.value }))} required />
+                <input id="deadline" value={obligations.deadline} onChange={event => setObligations(current => ({ ...current, deadline: event.target.value }))} placeholder="e.g. 2026-09-30T17:00:00Z" required />
               </div>
               <div className="form-field">
                 <label htmlFor="quantity">QUANTITY</label>
-                <input id="quantity" type="number" min="1" step="1" value={obligations.quantity} onChange={event => setObligations(current => ({ ...current, quantity: Math.max(1, Number(event.target.value) || 1) }))} required />
+                <input id="quantity" type="number" min="1" step="1" value={obligations.quantity || ""} onChange={event => setObligations(current => ({ ...current, quantity: event.target.value ? Math.max(1, Number(event.target.value)) : 0 }))} placeholder="e.g. 12" required />
               </div>
             </div>
           </div>
@@ -134,19 +133,19 @@ export default function NewAgreementPage() {
             <div className="structured-grid">
               <div className="form-field">
                 <label htmlFor="party-b-scope">SCOPE</label>
-                <input id="party-b-scope" value={partyBObligations.scope} onChange={event => setPartyBObligations(current => ({ ...current, scope: event.target.value }))} required />
+                <input id="party-b-scope" value={partyBObligations.scope} onChange={event => setPartyBObligations(current => ({ ...current, scope: event.target.value }))} placeholder="e.g. 12 critical API endpoints" required />
               </div>
               <div className="form-field">
                 <label htmlFor="party-b-evidence">EVIDENCE</label>
-                <input id="party-b-evidence" value={partyBObligations.evidence} onChange={event => setPartyBObligations(current => ({ ...current, evidence: event.target.value }))} required />
+                <input id="party-b-evidence" value={partyBObligations.evidence} onChange={event => setPartyBObligations(current => ({ ...current, evidence: event.target.value }))} placeholder="e.g. two independent penetration-test reports" required />
               </div>
               <div className="form-field">
                 <label htmlFor="party-b-deadline">DEADLINE</label>
-                <input id="party-b-deadline" value={partyBObligations.deadline} onChange={event => setPartyBObligations(current => ({ ...current, deadline: event.target.value }))} required />
+                <input id="party-b-deadline" value={partyBObligations.deadline} onChange={event => setPartyBObligations(current => ({ ...current, deadline: event.target.value }))} placeholder="e.g. 2026-09-30T17:00:00Z" required />
               </div>
               <div className="form-field">
                 <label htmlFor="party-b-quantity">QUANTITY</label>
-                <input id="party-b-quantity" type="number" min="1" step="1" value={partyBObligations.quantity} onChange={event => setPartyBObligations(current => ({ ...current, quantity: Math.max(1, Number(event.target.value) || 1) }))} required />
+                <input id="party-b-quantity" type="number" min="1" step="1" value={partyBObligations.quantity || ""} onChange={event => setPartyBObligations(current => ({ ...current, quantity: event.target.value ? Math.max(1, Number(event.target.value)) : 0 }))} placeholder="e.g. 12" required />
               </div>
             </div>
           </div>
