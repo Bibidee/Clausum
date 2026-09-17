@@ -82,7 +82,7 @@ export default function NewAgreementPage() {
             />
           </div>
           <div className="form-field">
-            <label htmlFor="agreement-text">NATURAL LANGUAGE AGREEMENT</label>
+            <label htmlFor="agreement-text">PARTY A INTERPRETATION</label>
             <textarea
               id="agreement-text"
               value={text}
@@ -90,9 +90,10 @@ export default function NewAgreementPage() {
                 setText(event.target.value);
                 setSelectedScenario(null);
               }}
-              placeholder="Describe the obligations both parties should understand…"
+              placeholder="Describe how Party A understands the obligations…"
               required
             />
+            <small>Party A and Party B commit their interpretations independently for GenLayer consensus.</small>
           </div>
           <div className="form-field">
             <label htmlFor="party-b-interpretation">PARTY B INTERPRETATION</label>
