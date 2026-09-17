@@ -70,6 +70,18 @@ export async function evaluationInputHash(value: { agreementId: string; partyA: 
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
+export async function contractEvaluationInputHash(value: { agreementId: string; revision: string; partyA: string; partyB: string; policyVersion: string }): Promise<string> {
+  const bytes = new TextEncoder().encode(`${value.agreementId}|${value.revision}|${value.partyA}|${value.partyB}|${value.policyVersion}`);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export async function contractCanonicalHash(value: { agreementId: string; revision: string; partyACommitment: string; partyBCommitment: string; policyVersion: string }): Promise<string> {
+  const bytes = new TextEncoder().encode(`${value.agreementId}|${value.revision}|${value.partyACommitment}|${value.partyBCommitment}|${value.policyVersion}`);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
 export function versionCommitmentPayload(value: { agreementId: string; revision: string; party: "a" | "b"; semanticTerms: string; scope: string; evidence: string; deadline: string; quantity: string; policyVersion?: string }): string {
   const fields = [value.agreementId, value.revision, value.party, value.scope, value.evidence, value.deadline, value.quantity, value.semanticTerms, value.policyVersion ?? POLICY_VERSION];
   const encoder = new TextEncoder();

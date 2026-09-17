@@ -5,6 +5,8 @@ import {
   canForm,
   canEvaluateCurrentInput,
   canonicalHash,
+  contractCanonicalHash,
+  contractEvaluationInputHash,
   createFormationReceipt,
   deterministicConflicts,
   evaluationInputHash,
@@ -12,14 +14,16 @@ import {
   isEvaluationFinalized,
   isEvaluationRequestCurrent,
   stableStringify,
+  versionCommitmentHash,
   type FormationReceipt,
   type ObligationModel,
   type SemanticOutcome,
 } from "./formation";
-import { connectStudioDev, isStudioDevChain, readFormationState, readProviderChainId, studioDevConfig, submitConsensus, switchToStudioDev, type Eip1193Provider } from "./genlayer";
+import { connectStudioDev, createNegotiation, evaluateNegotiation, isStudioDevChain, ratifyNegotiation, readFormationState, readProviderChainId, reviseNegotiation, studioDevConfig, submitConsensus, submitPartyVersionFromTerms, switchToStudioDev, type Eip1193Provider } from "./genlayer";
 
 const QUESTION = "Do these interpretations establish materially equivalent obligations?";
 const CONTRACT = process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || "";
+const CONTRACT_MODE = process.env.NEXT_PUBLIC_CLAUSUM_MODE === "contract";
 function describeWalletError(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === "object" && error !== null) {
@@ -46,6 +50,9 @@ export interface FormationState {
   partyAName: string;
   partyBName: string;
   partyBAddress: string;
+  chainRevision: number;
+  chainCreated: boolean;
+  chainVersions: { a: boolean; b: boolean };
   obligations: ObligationModel;
   stage: "conflict" | "ready";
   outcome: SemanticOutcome;
@@ -86,7 +93,9 @@ interface FormationContextValue extends FormationState {
   switchNetwork: () => Promise<void>;
   setWalletSession: (wallet: string | null, provider: Eip1193Provider | null) => void;
   evaluate: () => Promise<void>;
-  ratify: (party: "a" | "b") => void;
+  ratify: (party: "a" | "b") => void | Promise<void>;
+  submitVersion: (party: "a" | "b") => Promise<void>;
+  contractMode: boolean;
   refreshAuthoritativeState: () => Promise<void>;
 }
 
@@ -99,6 +108,9 @@ export function initialState(agreementId = createAgreementId()): FormationState 
     partyAName: "Atlas Procurement",
     partyBName: "Meridian Research",
     partyBAddress: "",
+    chainRevision: 1,
+    chainCreated: false,
+    chainVersions: { a: false, b: false },
     obligations: {
       scope: "five largest EU providers by revenue",
       evidence: "two independent public sources",
@@ -161,6 +173,9 @@ export function configureDraftState(previous: FormationState, draft: { title: st
     partyAName: draft.partyAName.trim() || "Party A",
     partyBName: draft.partyBName.trim() || "Party B",
     partyBAddress: draft.partyBAddress.trim(),
+    chainRevision: 1,
+    chainCreated: false,
+    chainVersions: { a: false, b: false },
     obligations: draft.obligations,
     stage: "conflict",
     notice: "Guided demo draft ready. Review both interpretations, then evaluate meaning.",
@@ -170,6 +185,8 @@ export function configureDraftState(previous: FormationState, draft: { title: st
 export function amendFormationState(previous: FormationState): FormationState {
   return {
     ...clearRuntime(previous, previous.semanticVersion + 1),
+    chainRevision: previous.chainRevision + 1,
+    chainVersions: { a: false, b: false },
     stage: "ready",
     notice: "Guided demo amendment applied. Previous semantic verdict invalidated; re-evaluation is required.",
   };
@@ -241,6 +258,9 @@ export function FormationProvider({ children }: { children: ReactNode }) {
         return {
           ...safe,
           partyBAddress: typeof safe.partyBAddress === "string" ? safe.partyBAddress : "",
+          chainRevision: Number.isInteger(safe.chainRevision) && safe.chainRevision > 0 ? safe.chainRevision : 1,
+          chainCreated: Boolean(safe.chainCreated),
+          chainVersions: { a: Boolean(safe.chainVersions?.a), b: Boolean(safe.chainVersions?.b) },
           status: safe.status === "submitting" ? "idle" : safe.status,
           canonicalHash: "",
           evaluationHash: "",
@@ -273,7 +293,16 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       canonicalHashStatus: "calculating",
       evaluationHashStatus: "calculating",
     }));
-    void Promise.all([canonicalHash(model), evaluationInputHash(input)]).then(([nextCanonicalHash, nextEvaluationHash]) => {
+    const canonicalTask = CONTRACT_MODE
+      ? Promise.all([
+        versionCommitmentHash({ agreementId: input.agreementId, revision: String(state.chainRevision), party: "a", semanticTerms: partyA, scope: partyAObligations.scope, evidence: partyAObligations.evidence, deadline: partyAObligations.deadline, quantity: String(partyAObligations.quantity) }),
+        versionCommitmentHash({ agreementId: input.agreementId, revision: String(state.chainRevision), party: "b", semanticTerms: partyB, scope: partyBObligations.scope, evidence: partyBObligations.evidence, deadline: partyBObligations.deadline, quantity: String(partyBObligations.quantity) }),
+      ]).then(([commitA, commitB]) => contractCanonicalHash({ agreementId: input.agreementId, revision: String(state.chainRevision), partyACommitment: commitA, partyBCommitment: commitB, policyVersion: model.policyVersion }))
+      : canonicalHash(model);
+    const evaluationTask = CONTRACT_MODE
+      ? contractEvaluationInputHash({ agreementId: input.agreementId, revision: String(state.chainRevision), partyA, partyB, policyVersion: model.policyVersion })
+      : evaluationInputHash(input);
+    void Promise.all([canonicalTask, evaluationTask]).then(([nextCanonicalHash, nextEvaluationHash]) => {
       if (request !== hashRequestRef.current) return;
       setState(previous => {
         if (previous.semanticVersion !== requestVersion || previous.agreementId !== input.agreementId) return previous;
@@ -286,7 +315,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
         };
       });
     });
-  }, [hydrated, input, model, state.agreementId, state.semanticVersion]);
+  }, [hydrated, input, model, partyA, partyB, partyAObligations, partyBObligations, state.agreementId, state.chainRevision, state.semanticVersion]);
 
   const conflicts = useMemo(() => deterministicConflicts(partyAObligations, partyBObligations), [partyAObligations, partyBObligations]);
   const hashesReady = state.canonicalHashStatus === "ready"
@@ -299,10 +328,12 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     transactionHash: state.tx,
     hashesReady,
   });
-  const ready = hashesReady
+  const localReady = hashesReady
     && state.status === "finalized"
     && Boolean(state.tx)
     && canForm(state.outcome, conflicts, state.canonicalHash, state.canonicalHash, state.evaluationHash, state.verdictHash);
+  const contractReady = CONTRACT_MODE && state.authoritativeRead?.state === "READY" && state.authoritativeRead.verdict === "EQUIVALENT";
+  const ready = CONTRACT_MODE ? Boolean(contractReady) : localReady;
   const evaluationReady = canEvaluateCurrentInput({
     hashesReady,
     evaluationFinalized,
@@ -313,7 +344,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     walletChainId: state.walletChainId,
     requiredChainId: studioDevConfig.chainId,
   });
-  const formed = ready
+  const formed = (CONTRACT_MODE ? state.authoritativeRead?.state === "FORMED" : ready)
     && canForm(state.outcome, conflicts, state.ratifications.a, state.ratifications.b, state.evaluationHash, state.verdictHash)
     && isFormationReceiptConsistent(state.receipt, {
       agreementId: state.agreementId,
@@ -347,12 +378,21 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     setState(previous => configureDraftState(previous, draft));
   };
 
-  const amend = () => {
+  const amend = async () => {
     if (state.status === "submitting") {
       setState(previous => ({ ...previous, notice: "Wait for the current semantic evaluation to finish." }));
       return;
     }
     evaluationRequestRef.current += 1;
+    if (CONTRACT_MODE) {
+      const provider = walletProviderRef.current;
+      if (!provider || !state.wallet || !state.walletReady) { setState(previous => ({ ...previous, notice: "Connect Party A's Studio-dev wallet before amending." })); return; }
+      try {
+        await reviseNegotiation(provider, CONTRACT as `0x${string}`, state.agreementId, state.wallet);
+        setState(amendFormationState);
+      } catch (error) { setState(previous => ({ ...previous, notice: describeWalletError(error) })); }
+      return;
+    }
     setState(amendFormationState);
   };
 
@@ -436,6 +476,34 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const submitVersion = async (party: "a" | "b") => {
+    if (!CONTRACT_MODE) { setState(previous => ({ ...previous, notice: "Contract submission is available when CLAUSUM is configured in contract mode." })); return; }
+    const provider = walletProviderRef.current;
+    if (!provider || !state.wallet || !state.walletReady) { setState(previous => ({ ...previous, notice: "Connect the authorized Studio-dev wallet before submitting a version." })); return; }
+    if (party === "b" && state.wallet.toLowerCase() !== state.partyBAddress.toLowerCase()) { setState(previous => ({ ...previous, notice: "Connect Party B's authorized wallet to submit Party B's version." })); return; }
+    if (party === "a" && state.wallet.toLowerCase() === state.partyBAddress.toLowerCase()) { setState(previous => ({ ...previous, notice: "Party A must submit from the Party A wallet." })); return; }
+    try {
+      if (party === "a" && !state.chainCreated) {
+        if (!/^0x[a-fA-F0-9]{40}$/.test(state.partyBAddress)) throw new Error("Enter Party B's wallet address before creating the negotiation.");
+        await createNegotiation(provider, CONTRACT as `0x${string}`, state.agreementId, state.partyBAddress as `0x${string}`, model.policyVersion, state.wallet);
+        setState(previous => ({ ...previous, chainCreated: true }));
+      }
+      if (!state.chainCreated && party === "b") { setState(previous => ({ ...previous, notice: "Party A must create the negotiation before Party B can submit." })); return; }
+      const obligations = party === "a" ? partyAObligations : partyBObligations;
+      await submitPartyVersionFromTerms(provider, CONTRACT as `0x${string}`, {
+        agreementId: state.agreementId,
+        revision: String(state.chainRevision),
+        party,
+        semanticTerms: party === "a" ? partyA : partyB,
+        scope: obligations.scope,
+        evidence: obligations.evidence,
+        deadline: obligations.deadline,
+        quantity: String(obligations.quantity),
+      }, state.wallet);
+      setState(previous => ({ ...previous, chainVersions: { ...previous.chainVersions, [party]: true }, notice: `Party ${party.toUpperCase()} version committed on Studio-dev.` }));
+    } catch (error) { setState(previous => ({ ...previous, notice: describeWalletError(error) })); }
+  };
+
   const evaluate = async () => {
     if (state.status === "submitting") return;
     const provider = walletProviderRef.current;
@@ -459,6 +527,10 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       setState(previous => ({ ...previous, notice: `Wrong wallet network. Switch to Studio-dev · ${studioDevConfig.chainId} before evaluating.` }));
       return;
     }
+    if (CONTRACT_MODE && (!state.chainCreated || !state.chainVersions.a || !state.chainVersions.b)) {
+      setState(previous => ({ ...previous, notice: "Commit both authorized party versions before requesting GenLayer judgment." }));
+      return;
+    }
     const request = ++evaluationRequestRef.current;
     const requestVersion = state.semanticVersion;
     const requestAgreementId = state.agreementId;
@@ -476,13 +548,16 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       notice: "Submitting semantic question to GenLayer validators…",
     }));
     try {
-      const result = await submitConsensus(provider, CONTRACT as `0x${string}`, {
-        agreementId: requestAgreementId,
-        inputHash: requestEvaluationHash,
-        buyerInterpretation: requestPartyA,
-        sellerInterpretation: requestPartyB,
-        question: QUESTION,
-      }, state.wallet ?? undefined);
+      const result = CONTRACT_MODE
+        ? await evaluateNegotiation(provider, CONTRACT as `0x${string}`, requestAgreementId, String(state.chainRevision), state.wallet ?? undefined)
+        : await submitConsensus(provider, CONTRACT as `0x${string}`, {
+          agreementId: requestAgreementId,
+          inputHash: requestEvaluationHash,
+          buyerInterpretation: requestPartyA,
+          sellerInterpretation: requestPartyB,
+          question: QUESTION,
+        }, state.wallet ?? undefined);
+      const authoritative = CONTRACT_MODE ? await readFormationState(provider, CONTRACT as `0x${string}`, requestAgreementId, state.wallet ?? undefined) : null;
       setState(previous => {
         const current = isEvaluationRequestCurrent({
           requestId: request,
@@ -501,6 +576,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
           verdictHash: requestEvaluationHash,
           tx: result.transactionHash,
           status: "finalized",
+          authoritativeRead: authoritative ? { ...authoritative, readAt: new Date().toISOString() } : previous.authoritativeRead,
           notice: result.outcome === "EQUIVALENT" ? "Validator consensus established material equivalence." : "Formation is blocked until these obligations converge.",
         };
       });
@@ -522,7 +598,23 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const ratify = (party: "a" | "b") => setState(previous => ratifyFormationState(previous, party, conflicts, CONTRACT, model.policyVersion));
+  const ratify = async (party: "a" | "b") => {
+    if (!CONTRACT_MODE) { setState(previous => ratifyFormationState(previous, party, conflicts, CONTRACT, model.policyVersion)); return; }
+    const provider = walletProviderRef.current;
+    if (!provider || !state.wallet || !state.walletReady) { setState(previous => ({ ...previous, notice: "Connect the authorized Studio-dev wallet before ratifying." })); return; }
+    const expected = party === "a" ? state.authoritativeRead?.partyAAddress : state.partyBAddress;
+    if (!expected || state.wallet.toLowerCase() !== expected.toLowerCase()) { setState(previous => ({ ...previous, notice: `Connect Party ${party.toUpperCase()}'s authorized wallet to ratify.` })); return; }
+    if (!state.canonicalHash || !state.authoritativeRead || state.authoritativeRead.state !== "READY") { setState(previous => ({ ...previous, notice: "The contract is not ready for ratification." })); return; }
+    try {
+      await ratifyNegotiation(provider, CONTRACT as `0x${string}`, state.agreementId, state.authoritativeRead.canonicalHash || state.canonicalHash, state.wallet);
+      const read = await readFormationState(provider, CONTRACT as `0x${string}`, state.agreementId, state.wallet);
+      setState(previous => {
+        const parsed = read.parsedReceipt;
+        const nextReceipt = read.state === "FORMED" && parsed ? createFormationReceipt({ agreementId: parsed.agreementId, canonicalAgreementHash: parsed.canonicalAgreementHash, evaluationInputHash: parsed.evaluationInputHash, verdict: parsed.verdict as SemanticOutcome, transactionHash: previous.tx, contractAddress: CONTRACT, network: "Studio-dev", partyARatifiedHash: parsed.partyARatifiedHash, partyBRatifiedHash: parsed.partyBRatifiedHash, policyVersion: parsed.policyVersion, formedAt: previous.receipt?.formedAt ?? new Date().toISOString() }) : previous.receipt;
+        return { ...previous, authoritativeRead: { ...read, readAt: new Date().toISOString() }, ratifications: { a: read.partyARatifiedHash, b: read.partyBRatifiedHash }, receipt: nextReceipt, notice: `Party ${party.toUpperCase()} ratification finalized on Studio-dev.` };
+      });
+    } catch (error) { setState(previous => ({ ...previous, notice: describeWalletError(error) })); }
+  };
 
   const refreshAuthoritativeState = async () => {
     const provider = walletProviderRef.current;
@@ -560,6 +652,8 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     setWalletSession,
     evaluate,
     ratify,
+    submitVersion,
+    contractMode: CONTRACT_MODE,
     refreshAuthoritativeState,
   }}>{children}</FormationContext.Provider>;
 }

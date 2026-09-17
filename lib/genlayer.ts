@@ -179,6 +179,11 @@ export async function ratifyNegotiation(provider: Eip1193Provider, contractAddre
   return writeAndFinalize(client, contractAddress, "ratify", [agreementId, canonicalHash]);
 }
 
+export async function reviseNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, knownAccount?: string): Promise<FormationWriteReceipt> {
+  const { client } = await connectStudioDev(provider, knownAccount);
+  return writeAndFinalize(client, contractAddress, "revise_negotiation", [agreementId]);
+}
+
 export async function readFormationState(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, knownAccount?: string) {
   const { client } = await connectStudioDev(provider, knownAccount);
   const [state, canonicalHash, ratifications, verdict, partyAddresses, receipt] = await Promise.all([

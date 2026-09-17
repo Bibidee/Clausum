@@ -18,7 +18,7 @@ CLAUSUM is a semantic formation layer for autonomous agreements. It establishes 
 
 Negotiation → interpretations → deterministic comparison → GenLayer semantic consensus → resolution → canonical agreement → ratification → Formation Receipt.
 
-In the current demo mode, the browser derives the presentation state from successful comparison and matching canonical hashes; this is explicitly not the authoritative contract formation path. The GenLayer adapter estimates fees, sends the wallet-signed write, waits for finalization, and requires a successful GenVM execution result.
+Contract mode uses the Intelligent Contract for negotiation creation, per-party version commitments, semantic evaluation, ratification, and formation state. A labelled `demo` mode remains available for offline UI rehearsal only; it is never evidence of onchain formation. The GenLayer adapter estimates fees, sends the wallet-signed write, waits for finalization, and requires a successful GenVM execution result.
 
 ## Studio Next integration
 
@@ -46,11 +46,10 @@ Live contract evidence for agreement `clausum-live-conflict-20260915`:
 
 ## Formation invariant and current deployment status
 
-The deployed legacy frontend derives formation locally. The candidate contract adds an authoritative
-formation state machine. The frontend still derives presentation state locally, while the deployed contract is the authoritative
+The deployed contract provides the authoritative formation state machine. In contract mode, formation is considered valid
 only when all of these are true: the latest GenLayer verdict is
 `EQUIVALENT`, deterministic conflicts are zero, the verdict input hash matches the active
-interpretations, and Party A and Party B have demo-ratified the same canonical SHA-256 hash.
+interpretations, and Party A and Party B have independently ratified the same canonical SHA-256 hash.
 Changing interpretations invalidates the previous verdict and both ratifications.
 
 The previous `0xdfDeF3B99df143E2e7a1f762d62671fC4DAd80CD` and `0xc363c709592BA8782eB5472153cAf4CeDEcBC084` addresses are retained only as **HISTORICAL** evidence.
