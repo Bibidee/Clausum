@@ -138,6 +138,6 @@ See [DEMO.md](DEMO.md) for the judge-facing script.
 ### Production roadmap
 
 - Migrate to a future production network only after GenLayer officially supports that network for this protocol.
-- Transaction Kit-powered wallet UX and generated fee profiles from `gltest`.
+- Transaction Kit-powered wallet UX and a genuine Studio-dev `gltest` fee profile for the measured `create_negotiation` path (`artifacts/fee-profile.json`).
 - Durable agreement storage, policy governance, receipts API, webhook events, SDK, and downstream protocol integrations.
 - Independent security review, privacy controls, and formalized legal-operational boundaries.

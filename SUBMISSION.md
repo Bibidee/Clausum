@@ -40,7 +40,7 @@ to the active browser session. These boundaries are deliberately visible in the 
 - Frontend build: PASS
 - GenLayer check/validate/typecheck: PASS (zero diagnostics; cached GenVM artifact `v0.6.0-rc5`)
 - Direct GenVM state-machine smoke: PASS (contract deployment, duplicate-ID rejection, unauthorized submission rejection, hard-field `MATERIAL_CONFLICT`, revision reset, semantic `UNRESOLVED`, `EQUIVALENT`, independent Party A/B ratification, `FORMED`, receipt readback, and formed-state replay rejection). Fresh live Studio-dev lifecycle evidence is recorded in `artifacts/live-e2e.studio-dev.json`.
-- Fee profile: NOT GENERATED. The prior zero-valued file was a placeholder and has been removed; a genuine `gltest` measurement is required after final deployment.
+- Fee profile: genuine Studio-dev `gltest` measurement recorded in [`artifacts/fee-profile.json`](artifacts/fee-profile.json) for `create_negotiation` (chain 61997, 15% headroom). The Studio-dev backend does not expose consumed fee accounting for this run, so the profile intentionally records only observed allocation/execution fields; no values are hand-invented.
 - Reown modal and supported wallet options: verified on the production origin.
 - EIP-1193 provider bridge into the GenLayer adapter: implemented; the provider's `eth_chainId` is checked against Studio-dev `61997` before a write.
 - Connected account, disconnect/reconnect, network switching, and a signed app transaction: **not verified** because no wallet session/provider was available in the browser environment.

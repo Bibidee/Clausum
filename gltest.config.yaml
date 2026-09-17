@@ -1,0 +1,14 @@
+networks:
+  default: studio_devnet
+  studio_devnet:
+    id: 61997
+    url: https://studio-dev.genlayer.com/api
+    accounts:
+      - ${DEPLOYER_PRIVATE_KEY}
+    from: ${DEPLOYER_PRIVATE_KEY}
+    chain_type: studio_devnet
+    leader_only: false
+paths:
+  contracts: contracts
+  artifacts: artifacts
+environment: development
