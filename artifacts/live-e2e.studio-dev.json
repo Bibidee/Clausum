@@ -1,42 +1,42 @@
 {
   "network": "studio-dev",
   "chainId": 61997,
-  "contractAddress": "0x37712179078235EEeB309044213d0d19aB204696",
+  "contractAddress": "0xcEec0403675761E938c16995Df6f835A701D44ec",
   "partyA": "0x9C19DA620173747132bA283EeE3B8849096A5454",
   "partyB": "0x97c23b57c228aDa51aD6eEa9798551579d6997f5",
   "transactions": {
     "create_negotiation_1": {
-      "hash": "0x6d084932c495bd16cdc5ba4bf8f87978c559160d85f4504b41ec2bde85666130"
+      "hash": "0x7b3a52380dbe2c5c79155fd11942011f8e266a5d90a893c9bd4069c514d305aa"
     },
     "submit_version_1": {
-      "hash": "0x0ddfc94375a7609cf8637a37b2b0888f40f52e1b622722db359a1e42d71f07ff"
+      "hash": "0xf0c5e9db2dcae92dd571268ef6b2e947a6c970ae9bb16c252b53562fe5dd9b71"
     },
     "submit_version_2": {
-      "hash": "0x5997817e88b41eda7d5061a59cdcff1903dcbe56bf0edbd07170edc99632bdbe"
+      "hash": "0x59a0e84dd044020e30a4a4c896d990dc6c8b64b72e7792bd960786894a94c5db"
     },
     "evaluate_negotiation_1": {
-      "hash": "0x2fc7c80ebac4f61a8e864b7dd5553b023c982b7cf02b8c9439c606b65f4513a0"
+      "hash": "0x68fbf7d1c3e05f9b89288a906bcbcb490241a2801901597d929e4e984cdf2048"
     },
     "revise_negotiation_1": {
-      "hash": "0xab48bea69902996079f4d37067b532108d177f3370ad301c5c7025e4c12e3cb0"
+      "hash": "0x0b95c619810b6bcf5c2228d3fc806cf8020f30e076587b80d868efea196229e1"
     },
     "submit_version_3": {
-      "hash": "0x077469c1e0f49e8e399127d0c8efa276f3d5c1bf359f30c91652e4cb1863095a"
+      "hash": "0x9b79b27fe2ad7b33494f03ba565a493a4b0119bcc1f7e5613472ffe40a8201a8"
     },
     "submit_version_4": {
-      "hash": "0x9c448906c6a7db5ab441150f7e7f15c14e48825a21b1046e4078621265773459"
+      "hash": "0xfd43ad8691ca15a096cb2f28f5d28a50ec086862f85f280310f8469951805e8f"
     },
     "evaluate_negotiation_2": {
-      "hash": "0xf3b588c9cd884eaf3c9ff6b5e7237c072d0912ab491e82e7649f1026ed12d7ae"
+      "hash": "0xd752d1986e3bf71f1b8d34e951276c87070b5971c708ff5281fb5d579e129f0f"
     },
     "ratify_1": {
-      "hash": "0x06719781d56063b2833a53ded90a4c23e9ceceecddeb27e70ef6a8bf0847ce6a"
+      "hash": "0x8c227bb539fdb97ebbd46947e996a702458e673686d1ec62c0dce4408fd8b78c"
     },
     "ratify_2": {
-      "hash": "0x8f3c419483ea76231fbf4c3973dc10cfcb14655c487f9900bfa8b6e78f500155"
+      "hash": "0x2c7df67bbefa75d2047dc393073b30684525446d6874621494a9c6ca78fcaeb0"
     }
   },
-  "agreementId": "AG-LIVE-872746",
+  "agreementId": "AG-LIVE-934844",
   "conflict": {
     "state": "BLOCKED",
     "verdict": "MATERIAL_CONFLICT"
@@ -44,15 +44,15 @@
   "equivalent": {
     "state": "READY",
     "verdict": "EQUIVALENT",
-    "canonicalHash": "b9701fc7c2deaa7fd84622e02a04628613e6ded54527c8d5b27d4e689f3d60cb"
+    "canonicalHash": "97947503ab34ed2631318d399a49122cc52cf6a931ff8be8702cde83f7ebef8c"
   },
   "afterPartyA": {
     "state": "READY",
-    "ratifications": "b9701fc7c2deaa7fd84622e02a04628613e6ded54527c8d5b27d4e689f3d60cb:"
+    "ratifications": "97947503ab34ed2631318d399a49122cc52cf6a931ff8be8702cde83f7ebef8c:"
   },
   "afterPartyB": {
     "state": "FORMED",
-    "ratifications": "b9701fc7c2deaa7fd84622e02a04628613e6ded54527c8d5b27d4e689f3d60cb:b9701fc7c2deaa7fd84622e02a04628613e6ded54527c8d5b27d4e689f3d60cb",
-    "receipt": "FormationReceiptV1|14:AG-LIVE-8727461:264:b9701fc7c2deaa7fd84622e02a04628613e6ded54527c8d5b27d4e689f3d60cb64:2e7c28510d8598b500c2d2d1a0ece0c6665e4fcedf1cbe830430ba88ddf7d18e10:EQUIVALENT64:b9701fc7c2deaa7fd84622e02a04628613e6ded54527c8d5b27d4e689f3d60cb64:b9701fc7c2deaa7fd84622e02a04628613e6ded54527c8d5b27d4e689f3d60cb3:0.1"
+    "ratifications": "97947503ab34ed2631318d399a49122cc52cf6a931ff8be8702cde83f7ebef8c:97947503ab34ed2631318d399a49122cc52cf6a931ff8be8702cde83f7ebef8c",
+    "receipt": "FormationReceiptV1|14:AG-LIVE-9348441:264:97947503ab34ed2631318d399a49122cc52cf6a931ff8be8702cde83f7ebef8c64:ac2c3f69c234a6465f936aeeebdd32c0416f462536aa7b5ec6f11f77be53df5210:EQUIVALENT64:97947503ab34ed2631318d399a49122cc52cf6a931ff8be8702cde83f7ebef8c64:97947503ab34ed2631318d399a49122cc52cf6a931ff8be8702cde83f7ebef8c3:0.1"
   }
 }

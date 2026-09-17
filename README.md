@@ -37,7 +37,7 @@ The final hardened instance was deployed and finalized on Studio Next (Studio-de
 [`0x1baee97d…1a5e5`](https://explorer-studio-dev.genlayer.com/tx/0x1baee97d1bd4d6e15ba2509be58cda8429decd1afea7f5447283f6c90de1a5e5).
 The deployed address is [`0xcEec0403675761E938c16995Df6f835A701D44ec`](https://explorer-studio-dev.genlayer.com/address/0xcEec0403675761E938c16995Df6f835A701D44ec).
 
-Fresh signed lifecycle evidence (`AG-LIVE-872746`) is recorded in [artifacts/live-e2e.studio-dev.json](artifacts/live-e2e.studio-dev.json): hard-field conflict finalized as `MATERIAL_CONFLICT`, amendment revision 2 evaluated as `EQUIVALENT`, Party A then Party B ratified independently, and contract readback reached `FORMED` with a `FormationReceiptV1` payload.
+Fresh signed lifecycle evidence (`AG-LIVE-934844`) is recorded in [artifacts/live-e2e.studio-dev.json](artifacts/live-e2e.studio-dev.json): hard-field conflict finalized as `MATERIAL_CONFLICT`, amendment revision 2 evaluated as `EQUIVALENT`, Party A then Party B ratified independently, and contract readback reached `FORMED` with a `FormationReceiptV1` payload.
 
 Live contract evidence for agreement `clausum-live-conflict-20260915`:
 
