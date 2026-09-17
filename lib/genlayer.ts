@@ -150,9 +150,42 @@ async function writeAndFinalize(client: Awaited<ReturnType<typeof connectStudioD
   const write = { address: contractAddress, functionName, args };
   const estimate = await client.estimateTransactionFeesForWrite(write);
   const transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
-  const receipt = await client.waitForFinalization({ hash: transactionHash as `0x${string}` & { length: 66 } });
+  const receipt = await waitForStudioFinalization(client, transactionHash);
   if (!isSuccessful(receipt)) throw new Error(`GenLayer write failed: ${receipt.statusName} / ${receipt.txExecutionResultName}`);
   return { transactionHash, finalized: true, executionSucceeded: true };
+}
+
+/**
+ * Studio-dev currently exposes a completed consensus transaction as stored
+ * status `ACCEPTED` (5) even after its protocol lifecycle has reached
+ * `FINALIZED`. genlayer-js's strict finalization poll only accepts status 7,
+ * so the UI can incorrectly report a timeout for a successful write. Accept
+ * the materialized decision as the completion proof, while retaining the
+ * SDK's strict poll whenever the endpoint reports FINALIZED normally.
+ */
+async function waitForStudioFinalization(
+  client: Awaited<ReturnType<typeof connectStudioDev>>["client"],
+  transactionHash: `0x${string}`,
+) {
+  // Studio-dev's stored lifecycle uses ACCEPTED for a transaction whose
+  // consensus result is already materialized (the raw lifecycle reports
+  // FINALIZED separately). Polling for the numeric FINALIZED status first
+  // needlessly waits until the SDK timeout, so use the decision boundary on
+  // Studio and keep strict finalization semantics on other networks.
+  if (client.chain.isStudio) {
+    const decided = await client.waitForDecision({ hash: transactionHash as `0x${string}` & { length: 66 } });
+    if (!isSuccessful(decided)) throw new Error(`GenLayer write failed: ${decided.statusName} / ${decided.txExecutionResultName}`);
+    return decided;
+  }
+  try {
+    return await client.waitForFinalization({ hash: transactionHash as `0x${string}` & { length: 66 } });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/Timed out waiting for transaction/i.test(message)) throw error;
+    const decided = await client.waitForDecision({ hash: transactionHash as `0x${string}` & { length: 66 } });
+    if (!isSuccessful(decided)) throw error;
+    return decided;
+  }
 }
 
 export async function createNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, partyB: `0x${string}`, policyVersion: string, knownAccount?: string): Promise<FormationWriteReceipt> {
@@ -213,9 +246,7 @@ export async function submitConsensus(
   const write = { address: contractAddress, functionName: "evaluate", args: [input.agreementId, input.inputHash, input.buyerInterpretation, input.sellerInterpretation, input.question] };
   const estimate = await client.estimateTransactionFeesForWrite(write);
   const transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
-  const receipt = await client.waitForFinalization({
-    hash: transactionHash as `0x${string}` & { length: 66 },
-  });
+  const receipt = await waitForStudioFinalization(client, transactionHash);
   if (!isSuccessful(receipt)) throw new Error(`GenLayer write failed: ${receipt.statusName} / ${receipt.txExecutionResultName}`);
   const outcome = await client.readContract({
     address: contractAddress,
