@@ -6,12 +6,79 @@ import { CONTRACT, useFormation } from "../../lib/formation-context";
 import { CopyButton, ExplorerLink, HashDisplay, ProtocolBadge } from "../ui/ProtocolPrimitives";
 
 export function FormationCertificate() {
-  const { receipt, agreementId, model, outcome, ratifications, canonicalHash, evaluationHash, verdictHash, tx, formed, authoritativeRead } = useFormation();
-  const issuedReceipt = formed && authoritativeRead?.state === "FORMED" && isFormationReceiptConsistent(receipt, { agreementId, canonicalHash, evaluationHash, verdictHash, transactionHash: tx, contractAddress: CONTRACT, network: "Studio-dev", policyVersion: model.policyVersion }) ? receipt : null;
+  const {
+    receipt,
+    formed,
+    authoritativeRead,
+    agreementId,
+    model,
+    outcome,
+    ratifications,
+    canonicalHash,
+    evaluationHash,
+    verdictHash,
+    tx,
+  } = useFormation();
+  const issuedReceipt = formed && isFormationReceiptConsistent(receipt, {
+    agreementId,
+    canonicalHash,
+    evaluationHash,
+    verdictHash,
+    transactionHash: tx,
+    contractAddress: CONTRACT,
+    network: "Studio-dev",
+    policyVersion: model.policyVersion,
+  }) ? receipt : null;
+
   if (!issuedReceipt) {
-    const prerequisites: Array<[string, boolean]> = [["Equivalent verdict", outcome === "EQUIVALENT"], ["Party A ratification", !!ratifications.a && ratifications.a === canonicalHash], ["Party B ratification", !!ratifications.b && ratifications.b === canonicalHash]];
-    return <section className="certificate pending"><div className="certificate-lock"><LockKeyhole size={24} /></div><ProtocolBadge tone="violet">RECEIPT PENDING</ProtocolBadge><h1>Proof waits for shared meaning.</h1><p>The Formation Receipt is issued only after an equivalent GenLayer verdict and matching ratifications. It is not a cryptographic signature.</p><div className="receipt-prerequisites">{prerequisites.map(([label, complete]) => <div className={complete ? "complete" : ""} key={label}><span>{complete ? <Check size={14} /> : <LockKeyhole size={14} />}</span><strong>{label}</strong><small>{complete ? "ready" : "waiting"}</small></div>)}</div><div className="pending-lines"><i /><i /><i /></div></section>;
+    const prerequisites: Array<[string, boolean]> = [
+      ["Equivalent verdict", outcome === "EQUIVALENT" && authoritativeRead?.verdict === "EQUIVALENT"],
+      ["Party A ratification", !!ratifications.a && ratifications.a === canonicalHash],
+      ["Party B ratification", !!ratifications.b && ratifications.b === canonicalHash],
+      ["Contract state FORMED", authoritativeRead?.state === "FORMED"],
+    ];
+    return (
+      <section className="certificate pending">
+        <div className="certificate-lock"><LockKeyhole size={24} /></div>
+        <ProtocolBadge tone="violet">RECEIPT PENDING</ProtocolBadge>
+        <h1>Proof waits for shared meaning.</h1>
+        <p>The Formation Receipt is issued only after the contract records an equivalent GenLayer verdict and both authorized parties ratify the same canonical hash.</p>
+        <div className="receipt-prerequisites">
+          {prerequisites.map(([label, complete]) => (
+            <div className={complete ? "complete" : ""} key={label}>
+              <span>{complete ? <Check size={14} /> : <LockKeyhole size={14} />}</span>
+              <strong>{label}</strong>
+              <small>{complete ? "ready" : "waiting"}</small>
+            </div>
+          ))}
+        </div>
+        <div className="pending-lines"><i /><i /><i /></div>
+      </section>
+    );
   }
-  const fields = [["Agreement ID", issuedReceipt.agreementId], ["Verdict", issuedReceipt.verdict], ["Network", issuedReceipt.network], ["Policy version", `CLAUSUM v${issuedReceipt.policyVersion}`], ["Formed at", issuedReceipt.formedAt]];
-  return <section className="certificate issued"><div className="certificate-seal"><Award size={30} /><Check size={14} /></div><ProtocolBadge tone="success">FORMATION RECEIPT · ISSUED</ProtocolBadge><h1>Agreement formed.</h1><p>Both parties ratified the same canonical hash after semantic equivalence was finalized. Receipt values come from the finalized Intelligent Contract read; the transaction and address below link to GenLayer evidence.</p><div className="certificate-grid">{fields.map(([label, value]) => <div key={label}><small>{label}</small><strong>{value}</strong></div>)}</div><div className="certificate-hashes"><div><small>Canonical agreement</small><HashDisplay value={issuedReceipt.canonicalAgreementHash} compact /></div><div><small>Evaluation input</small><HashDisplay value={issuedReceipt.evaluationInputHash} compact /></div><div><small>Transaction</small><div className="copy-line"><HashDisplay label="TX" value={issuedReceipt.transactionHash} compact /><CopyButton value={issuedReceipt.transactionHash} /></div><ExplorerLink value={issuedReceipt.transactionHash} /></div><div><small>Contract</small><div className="copy-line"><HashDisplay label="ADDR" value={issuedReceipt.contractAddress} compact /><CopyButton value={issuedReceipt.contractAddress} /></div><ExplorerLink kind="address" value={issuedReceipt.contractAddress} /></div><div><small>Party A ratified</small><HashDisplay value={issuedReceipt.partyARatifiedHash} compact /></div><div><small>Party B ratified</small><HashDisplay value={issuedReceipt.partyBRatifiedHash} compact /></div></div></section>;
+
+  const fields = [
+    ["Agreement ID", issuedReceipt.agreementId],
+    ["Verdict", issuedReceipt.verdict],
+    ["Network", issuedReceipt.network],
+    ["Policy version", `CLAUSUM v${issuedReceipt.policyVersion}`],
+    ["Formed at", issuedReceipt.formedAt],
+  ];
+  return (
+    <section className="certificate issued">
+      <div className="certificate-seal"><Award size={30} /><Check size={14} /></div>
+      <ProtocolBadge tone="success">FORMATION RECEIPT · ISSUED</ProtocolBadge>
+      <h1>Agreement formed.</h1>
+      <p>Both parties ratified the same canonical hash after semantic equivalence was finalized. This receipt is backed by the active Intelligent Contract readback.</p>
+      <div className="certificate-grid">{fields.map(([label, value]) => <div key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
+      <div className="certificate-hashes">
+        <div><small>Canonical agreement</small><HashDisplay value={issuedReceipt.canonicalAgreementHash} compact /></div>
+        <div><small>Evaluation input</small><HashDisplay value={issuedReceipt.evaluationInputHash} compact /></div>
+        <div><small>Transaction</small><div className="copy-line"><HashDisplay label="TX" value={issuedReceipt.transactionHash} compact /><CopyButton value={issuedReceipt.transactionHash} /></div><ExplorerLink value={issuedReceipt.transactionHash} /></div>
+        <div><small>Contract</small><div className="copy-line"><HashDisplay label="ADDR" value={issuedReceipt.contractAddress} compact /><CopyButton value={issuedReceipt.contractAddress} /></div><ExplorerLink kind="address" value={issuedReceipt.contractAddress} /></div>
+        <div><small>Party A ratified</small><HashDisplay value={issuedReceipt.partyARatifiedHash} compact /></div>
+        <div><small>Party B ratified</small><HashDisplay value={issuedReceipt.partyBRatifiedHash} compact /></div>
+      </div>
+    </section>
+  );
 }

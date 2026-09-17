@@ -50,10 +50,13 @@ export interface FormationState {
   partyAName: string;
   partyBName: string;
   partyBAddress: string;
+  partyAInterpretation: string;
+  partyBInterpretation: string;
   chainRevision: number;
   chainCreated: boolean;
   chainVersions: { a: boolean; b: boolean };
   obligations: ObligationModel;
+  partyBObligations: ObligationModel;
   stage: "conflict" | "ready";
   outcome: SemanticOutcome;
   status: "idle" | "submitting" | "finalized" | "error";
@@ -87,7 +90,7 @@ interface FormationContextValue extends FormationState {
   life: string;
   model: { parties: string[]; obligations: ObligationModel; policyVersion: string };
   reset: () => void;
-  configureDraft: (draft: { title: string; partyAName: string; partyBName: string; partyBAddress: string; obligations: ObligationModel }) => void;
+  configureDraft: (draft: { title: string; partyAName: string; partyBName: string; partyBAddress: string; partyAInterpretation?: string; partyBInterpretation?: string; obligations: ObligationModel; partyBObligations?: ObligationModel }) => void;
   amend: () => void;
   connect: () => Promise<void>;
   switchNetwork: () => Promise<void>;
@@ -108,6 +111,8 @@ export function initialState(agreementId = createAgreementId()): FormationState 
     partyAName: "Atlas Procurement",
     partyBName: "Meridian Research",
     partyBAddress: "",
+    partyAInterpretation: "Produce a competitor report covering the five largest European providers, using public sources, by Friday at 17:00.",
+    partyBInterpretation: "Produce a competitor report covering the five largest European providers, using public sources, by Friday at 17:00.",
     chainRevision: 1,
     chainCreated: false,
     chainVersions: { a: false, b: false },
@@ -115,6 +120,12 @@ export function initialState(agreementId = createAgreementId()): FormationState 
       scope: "five largest EU providers by revenue",
       evidence: "two independent public sources",
       deadline: "Friday 17:00 CET",
+      quantity: 5,
+    },
+    partyBObligations: {
+      scope: "five largest EU providers by revenue",
+      evidence: "one public source",
+      deadline: "Friday 17:00 UTC",
       quantity: 5,
     },
     stage: "conflict",
@@ -165,18 +176,25 @@ export function resetFormationState(previous: FormationState): FormationState {
   };
 }
 
-export function configureDraftState(previous: FormationState, draft: { title: string; partyAName: string; partyBName: string; partyBAddress: string; obligations: ObligationModel }): FormationState {
+export function configureDraftState(previous: FormationState, draft: { title: string; partyAName: string; partyBName: string; partyBAddress?: string; partyAInterpretation?: string; partyBInterpretation?: string; obligations: ObligationModel; partyBObligations?: ObligationModel }): FormationState {
   return {
     ...clearRuntime(previous, previous.semanticVersion + 1),
     agreementId: createAgreementId(),
     agreementTitle: draft.title.trim() || "Untitled agreement",
     partyAName: draft.partyAName.trim() || "Party A",
     partyBName: draft.partyBName.trim() || "Party B",
-    partyBAddress: draft.partyBAddress.trim(),
+    partyBAddress: draft.partyBAddress?.trim() ?? "",
+    partyAInterpretation: draft.partyAInterpretation?.trim() ?? "",
+    partyBInterpretation: draft.partyBInterpretation?.trim() || draft.partyAInterpretation?.trim() || "",
     chainRevision: 1,
     chainCreated: false,
     chainVersions: { a: false, b: false },
     obligations: draft.obligations,
+    partyBObligations: draft.partyBObligations ?? {
+      ...draft.obligations,
+      evidence: "one public source",
+      deadline: "Friday 17:00 UTC",
+    },
     stage: "conflict",
     notice: "Guided demo draft ready. Review both interpretations, then evaluate meaning.",
   };
@@ -187,6 +205,7 @@ export function amendFormationState(previous: FormationState): FormationState {
     ...clearRuntime(previous, previous.semanticVersion + 1),
     chainRevision: previous.chainRevision + 1,
     chainVersions: { a: false, b: false },
+    partyBObligations: previous.obligations,
     stage: "ready",
     notice: "Guided demo amendment applied. Previous semantic verdict invalidated; re-evaluation is required.",
   };
@@ -231,11 +250,9 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     policyVersion: "0.1",
   }), [state.partyAName, state.partyBName, state.obligations]);
   const partyAObligations = model.obligations;
-  const partyBObligations = useMemo<ObligationModel>(() => state.stage === "conflict"
-    ? { scope: model.obligations.scope, evidence: "one public source", deadline: "Friday 17:00 UTC", quantity: model.obligations.quantity }
-    : model.obligations, [model, state.stage]);
-  const partyA = useMemo(() => stableStringify(partyAObligations), [partyAObligations]);
-  const partyB = useMemo(() => stableStringify(partyBObligations), [partyBObligations]);
+  const partyBObligations = state.partyBObligations;
+  const partyA = useMemo(() => state.partyAInterpretation.trim() || stableStringify(partyAObligations), [partyAObligations, state.partyAInterpretation]);
+  const partyB = useMemo(() => state.partyBInterpretation.trim() || stableStringify(partyBObligations), [partyBObligations, state.partyBInterpretation]);
   const input = useMemo(() => ({
     agreementId: state.agreementId,
     partyA,
@@ -258,6 +275,20 @@ export function FormationProvider({ children }: { children: ReactNode }) {
         return {
           ...safe,
           partyBAddress: typeof safe.partyBAddress === "string" ? safe.partyBAddress : "",
+          partyAInterpretation: typeof safe.partyAInterpretation === "string" ? safe.partyAInterpretation : "",
+          partyBInterpretation: typeof safe.partyBInterpretation === "string" ? safe.partyBInterpretation : "",
+          partyBObligations: safe.partyBObligations && typeof safe.partyBObligations === "object"
+            ? {
+              scope: typeof safe.partyBObligations.scope === "string" ? safe.partyBObligations.scope : safe.obligations.scope,
+              evidence: typeof safe.partyBObligations.evidence === "string" ? safe.partyBObligations.evidence : "one public source",
+              deadline: typeof safe.partyBObligations.deadline === "string" ? safe.partyBObligations.deadline : "Friday 17:00 UTC",
+              quantity: Number.isFinite(safe.partyBObligations.quantity) ? safe.partyBObligations.quantity : safe.obligations.quantity,
+            }
+            : {
+              ...safe.obligations,
+              evidence: "one public source",
+              deadline: "Friday 17:00 UTC",
+            },
           chainRevision: Number.isInteger(safe.chainRevision) && safe.chainRevision > 0 ? safe.chainRevision : 1,
           chainCreated: Boolean(safe.chainCreated),
           chainVersions: { a: Boolean(safe.chainVersions?.a), b: Boolean(safe.chainVersions?.b) },
@@ -369,7 +400,7 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     setState(resetFormationState);
   };
 
-  const configureDraft = (draft: { title: string; partyAName: string; partyBName: string; partyBAddress: string; obligations: ObligationModel }) => {
+  const configureDraft = (draft: { title: string; partyAName: string; partyBName: string; partyBAddress: string; partyAInterpretation?: string; partyBInterpretation?: string; obligations: ObligationModel; partyBObligations?: ObligationModel }) => {
     if (state.status === "submitting") {
       setState(previous => ({ ...previous, notice: "Wait for the current semantic evaluation to finish." }));
       return;

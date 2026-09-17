@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "network": "studio_devnet",
+  "measuredAt": "2026-09-17T01:24:29Z",
+  "chainId": 61997,
+  "methods": {
+    "create_negotiation": {
+      "leaderTimeunitsAllocation": "115",
+      "validatorTimeunitsAllocation": "230",
+      "executionBudgetPerRound": "90438875000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "3"
+    }
+  }
+}

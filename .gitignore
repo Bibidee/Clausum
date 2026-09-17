@@ -47,6 +47,8 @@ tsconfig.tsbuildinfo
 /work/
 /.genlayer-python/
 /.genlayer-python-runtime/
+/.tools/
+/recovery/
 .pnpm-store/
 __pycache__/
 *.pyc
