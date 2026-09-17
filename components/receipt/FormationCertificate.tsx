@@ -6,8 +6,8 @@ import { CONTRACT, useFormation } from "../../lib/formation-context";
 import { CopyButton, ExplorerLink, HashDisplay, ProtocolBadge } from "../ui/ProtocolPrimitives";
 
 export function FormationCertificate() {
-  const { receipt, agreementId, model, outcome, ratifications, canonicalHash, evaluationHash, verdictHash, tx } = useFormation();
-  const issuedReceipt = isFormationReceiptConsistent(receipt, { agreementId, canonicalHash, evaluationHash, verdictHash, transactionHash: tx, contractAddress: CONTRACT, network: "Studio-dev", policyVersion: model.policyVersion }) ? receipt : null;
+  const { receipt, agreementId, model, outcome, ratifications, canonicalHash, evaluationHash, verdictHash, tx, formed, authoritativeRead } = useFormation();
+  const issuedReceipt = formed && authoritativeRead?.state === "FORMED" && isFormationReceiptConsistent(receipt, { agreementId, canonicalHash, evaluationHash, verdictHash, transactionHash: tx, contractAddress: CONTRACT, network: "Studio-dev", policyVersion: model.policyVersion }) ? receipt : null;
   if (!issuedReceipt) {
     const prerequisites: Array<[string, boolean]> = [["Equivalent verdict", outcome === "EQUIVALENT"], ["Party A ratification", !!ratifications.a && ratifications.a === canonicalHash], ["Party B ratification", !!ratifications.b && ratifications.b === canonicalHash]];
     return <section className="certificate pending"><div className="certificate-lock"><LockKeyhole size={24} /></div><ProtocolBadge tone="violet">RECEIPT PENDING</ProtocolBadge><h1>Proof waits for shared meaning.</h1><p>The Formation Receipt is issued only after an equivalent GenLayer verdict and matching ratifications. It is not a cryptographic signature.</p><div className="receipt-prerequisites">{prerequisites.map(([label, complete]) => <div className={complete ? "complete" : ""} key={label}><span>{complete ? <Check size={14} /> : <LockKeyhole size={14} />}</span><strong>{label}</strong><small>{complete ? "ready" : "waiting"}</small></div>)}</div><div className="pending-lines"><i /><i /><i /></div></section>;
