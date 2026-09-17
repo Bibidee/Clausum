@@ -28,14 +28,16 @@ The `@x402/*` packages are present to satisfy transitive Reown/Coinbase wallet d
 - Network: `studio-dev`
 - Chain ID: `61997`
 - RPC: `https://studio-dev.genlayer.com/api`
-- Active deployed contract (legacy oracle ABI): `0x2a30A638456fc607D306c9617963898CdAae8BC6`
-- Candidate source (not yet deployed): [contracts/semantic_consensus.py](contracts/semantic_consensus.py)
+- Active contract-authoritative deployment: `0xcEec0403675761E938c16995Df6f835A701D44ec`
+- Historical legacy oracle: `0x2a30A638456fc607D306c9617963898CdAae8BC6` (**HISTORICAL**)
 
 ### Verified Studio Next evidence
 
 The final hardened instance was deployed and finalized on Studio Next (Studio-dev). Its deployment transaction is
-[`0xd2570734…f03df`](https://explorer-studio-dev.genlayer.com/tx/0xd2570734474affa04ecfa2cafe16b3c1f00a9f19139efd84a37ab27f273f03df).
-The deployed address is [`0x2a30A638456fc607D306c9617963898CdAae8BC6`](https://explorer-studio-dev.genlayer.com/address/0x2a30A638456fc607D306c9617963898CdAae8BC6).
+[`0x1baee97d…1a5e5`](https://explorer-studio-dev.genlayer.com/tx/0x1baee97d1bd4d6e15ba2509be58cda8429decd1afea7f5447283f6c90de1a5e5).
+The deployed address is [`0xcEec0403675761E938c16995Df6f835A701D44ec`](https://explorer-studio-dev.genlayer.com/address/0xcEec0403675761E938c16995Df6f835A701D44ec).
+
+Fresh signed lifecycle evidence (`AG-LIVE-872746`) is recorded in [artifacts/live-e2e.studio-dev.json](artifacts/live-e2e.studio-dev.json): hard-field conflict finalized as `MATERIAL_CONFLICT`, amendment revision 2 evaluated as `EQUIVALENT`, Party A then Party B ratified independently, and contract readback reached `FORMED` with a `FormationReceiptV1` payload.
 
 Live contract evidence for agreement `clausum-live-conflict-20260915`:
 
@@ -45,7 +47,7 @@ Live contract evidence for agreement `clausum-live-conflict-20260915`:
 ## Formation invariant and current deployment status
 
 The deployed legacy frontend derives formation locally. The candidate contract adds an authoritative
-formation state machine; it is not yet deployed. Until that deployment occurs, formation is calculated
+formation state machine. The frontend still derives presentation state locally, while the deployed contract is the authoritative
 only when all of these are true: the latest GenLayer verdict is
 `EQUIVALENT`, deterministic conflicts are zero, the verdict input hash matches the active
 interpretations, and Party A and Party B have demo-ratified the same canonical SHA-256 hash.

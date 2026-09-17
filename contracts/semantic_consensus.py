@@ -11,8 +11,8 @@ class SemanticConsensus(gl.contract.Contract):
     # Formation state is kept in separate primitive maps so no serialized
     # Python object is authoritative onchain.
     negotiation_exists: TreeMap[str, bool]
-    party_a_addresses: TreeMap[str, Address]
-    party_b_addresses: TreeMap[str, Address]
+    party_a_addresses: TreeMap[str, str]
+    party_b_addresses: TreeMap[str, str]
     policy_versions: TreeMap[str, str]
     revisions: TreeMap[str, str]
     version_commitments: TreeMap[str, str]
@@ -56,8 +56,8 @@ class SemanticConsensus(gl.contract.Contract):
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def _require_party(self, agreement_id: str, party: str):
-        sender = gl.message.sender_address
-        expected = self.party_a_addresses.get(agreement_id, Address.ZERO) if party == "a" else self.party_b_addresses.get(agreement_id, Address.ZERO)
+        sender = gl.message.sender_address.as_hex
+        expected = self.party_a_addresses.get(agreement_id, Address.ZERO.as_hex) if party == "a" else self.party_b_addresses.get(agreement_id, Address.ZERO.as_hex)
         if sender != expected:
             raise gl.vm.UserError("caller is not the authorized party")
 
@@ -82,14 +82,15 @@ class SemanticConsensus(gl.contract.Contract):
             raise gl.vm.UserError("invalid agreement id")
         if self.negotiation_exists.get(agreement_id, False):
             raise gl.vm.UserError("negotiation already exists")
-        sender = gl.message.sender_address
-        if sender == party_b:
+        sender = gl.message.sender_address.as_hex
+        party_b_hex = party_b.as_hex if hasattr(party_b, "as_hex") else str(party_b)
+        if sender == party_b_hex:
             raise gl.vm.UserError("parties must use distinct addresses")
         if len(policy_version) == 0 or len(policy_version) > 32:
             raise gl.vm.UserError("invalid policy version")
         self.negotiation_exists.__setitem__(agreement_id, True)
         self.party_a_addresses.__setitem__(agreement_id, sender)
-        self.party_b_addresses.__setitem__(agreement_id, party_b)
+        self.party_b_addresses.__setitem__(agreement_id, party_b_hex)
         self.policy_versions.__setitem__(agreement_id, policy_version)
         self.revisions.__setitem__(agreement_id, "1")
         self._clear_revision_proof(agreement_id)
@@ -191,10 +192,10 @@ class SemanticConsensus(gl.contract.Contract):
         current = self.canonical_hashes.get(agreement_id, "")
         if verdict != "EQUIVALENT" or current == "" or canonical_hash.lower() != current:
             raise gl.vm.UserError("ratification is not available for this canonical agreement")
-        sender = gl.message.sender_address
-        if sender == self.party_a_addresses.get(agreement_id, Address.ZERO):
+        sender = gl.message.sender_address.as_hex
+        if sender == self.party_a_addresses.get(agreement_id, Address.ZERO.as_hex):
             self.ratified_a.__setitem__(agreement_id, current)
-        elif sender == self.party_b_addresses.get(agreement_id, Address.ZERO):
+        elif sender == self.party_b_addresses.get(agreement_id, Address.ZERO.as_hex):
             self.ratified_b.__setitem__(agreement_id, current)
         else:
             raise gl.vm.UserError("caller is not an authorized party")
@@ -225,7 +226,7 @@ class SemanticConsensus(gl.contract.Contract):
     @gl.public.view
     def get_party_addresses(self, agreement_id: str) -> str:
         self._require_negotiation(agreement_id)
-        return self.party_a_addresses.get(agreement_id, Address.ZERO).as_hex + ":" + self.party_b_addresses.get(agreement_id, Address.ZERO).as_hex
+        return self.party_a_addresses.get(agreement_id, Address.ZERO.as_hex) + ":" + self.party_b_addresses.get(agreement_id, Address.ZERO.as_hex)
 
     @gl.public.view
     def get_formation_receipt(self, agreement_id: str) -> str:
