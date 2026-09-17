@@ -146,10 +146,61 @@ export interface PartyVersionInput {
 
 type CalldataArg = string | number | bigint | boolean | null;
 
+type RpcErrorLike = { code?: unknown; message?: unknown; data?: { retry_after_seconds?: unknown }; cause?: unknown };
+
+function walkRpcError(error: unknown): RpcErrorLike[] {
+  const seen = new Set<unknown>();
+  const entries: RpcErrorLike[] = [];
+  let current: unknown = error;
+  while (current && typeof current === "object" && !seen.has(current)) {
+    seen.add(current);
+    entries.push(current as RpcErrorLike);
+    current = (current as RpcErrorLike).cause;
+  }
+  return entries;
+}
+
+function isStudioBusy(error: unknown) {
+  return walkRpcError(error).some(entry => entry.code === -32006 || /all 8 execution slots occupied|server busy/i.test(String(entry.message)));
+}
+
+function retryDelay(error: unknown) {
+  const seconds = walkRpcError(error)
+    .map(entry => Number(entry.data?.retry_after_seconds))
+    .find(value => Number.isFinite(value) && value > 0);
+  return Math.min(Math.max(seconds ?? 2, 1), 8) * 1000;
+}
+
+const sleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+
+/** Retry safe read, estimation, and lifecycle polls when Studio-dev is busy.
+ * Never wrap a signed write: a network-ambiguous write must be retried only
+ * after the caller has checked the chain, avoiding accidental duplicates. */
+async function retryStudioBusy<T>(operation: () => Promise<T>, attempts = 4): Promise<T> {
+  let lastError: unknown;
+  for (let index = 0; index < attempts; index += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isStudioBusy(error) || index === attempts - 1) break;
+      await sleep(retryDelay(error));
+    }
+  }
+  if (isStudioBusy(lastError)) throw new Error("Studio-dev is temporarily busy. No transaction was retried automatically; wait a few seconds, verify the on-chain state, then try again.");
+  throw lastError;
+}
+
 async function writeAndFinalize(client: Awaited<ReturnType<typeof connectStudioDev>>["client"], contractAddress: `0x${string}`, functionName: string, args: CalldataArg[]): Promise<FormationWriteReceipt> {
   const write = { address: contractAddress, functionName, args };
-  const estimate = await client.estimateTransactionFeesForWrite(write);
-  const transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
+  const estimate = await retryStudioBusy(() => client.estimateTransactionFeesForWrite(write));
+  let transactionHash: `0x${string}`;
+  try {
+    transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
+  } catch (error) {
+    if (isStudioBusy(error)) throw new Error("Studio-dev is temporarily busy before the write could be confirmed. No automatic retry was sent; verify the on-chain state, then try again.");
+    throw error;
+  }
   const receipt = await waitForStudioFinalization(client, transactionHash);
   if (!isSuccessful(receipt)) throw new Error(`GenLayer write failed: ${receipt.statusName} / ${receipt.txExecutionResultName}`);
   return { transactionHash, finalized: true, executionSucceeded: true };
@@ -173,16 +224,16 @@ async function waitForStudioFinalization(
   // needlessly waits until the SDK timeout, so use the decision boundary on
   // Studio and keep strict finalization semantics on other networks.
   if (client.chain.isStudio) {
-    const decided = await client.waitForDecision({ hash: transactionHash as `0x${string}` & { length: 66 } });
+    const decided = await retryStudioBusy(() => client.waitForDecision({ hash: transactionHash as `0x${string}` & { length: 66 } }));
     if (!isSuccessful(decided)) throw new Error(`GenLayer write failed: ${decided.statusName} / ${decided.txExecutionResultName}`);
     return decided;
   }
   try {
-    return await client.waitForFinalization({ hash: transactionHash as `0x${string}` & { length: 66 } });
+    return await retryStudioBusy(() => client.waitForFinalization({ hash: transactionHash as `0x${string}` & { length: 66 } }));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (!/Timed out waiting for transaction/i.test(message)) throw error;
-    const decided = await client.waitForDecision({ hash: transactionHash as `0x${string}` & { length: 66 } });
+    const decided = await retryStudioBusy(() => client.waitForDecision({ hash: transactionHash as `0x${string}` & { length: 66 } }));
     if (!isSuccessful(decided)) throw error;
     return decided;
   }
@@ -206,7 +257,7 @@ export async function submitPartyVersionFromTerms(provider: Eip1193Provider, con
 export async function evaluateNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, revision: string, knownAccount?: string): Promise<ConsensusReceipt> {
   const { client } = await connectStudioDev(provider, knownAccount);
   const receipt = await writeAndFinalize(client, contractAddress, "evaluate_negotiation", [agreementId, revision]);
-  const outcome = await client.readContract({ address: contractAddress, functionName: "get_formation_state", args: [agreementId] });
+  const outcome = await retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_formation_state", args: [agreementId] }));
   const mapped = outcome === "READY" ? "EQUIVALENT" : outcome === "BLOCKED" ? "MATERIAL_CONFLICT" : "UNRESOLVED";
   return { transactionHash: receipt.transactionHash, outcome: mapped, finalized: true, executionSucceeded: true };
 }
@@ -224,12 +275,12 @@ export async function reviseNegotiation(provider: Eip1193Provider, contractAddre
 export async function readFormationState(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, knownAccount?: string) {
   const { client } = await connectStudioDev(provider, knownAccount);
   const [state, canonicalHash, ratifications, verdict, partyAddresses, receipt] = await Promise.all([
-    client.readContract({ address: contractAddress, functionName: "get_formation_state", args: [agreementId] }),
-    client.readContract({ address: contractAddress, functionName: "get_canonical_hash", args: [agreementId] }),
-    client.readContract({ address: contractAddress, functionName: "get_ratifications", args: [agreementId] }),
-    client.readContract({ address: contractAddress, functionName: "get_verdict", args: [agreementId] }),
-    client.readContract({ address: contractAddress, functionName: "get_party_addresses", args: [agreementId] }),
-    client.readContract({ address: contractAddress, functionName: "get_formation_receipt", args: [agreementId] }),
+    retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_formation_state", args: [agreementId] })),
+    retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_canonical_hash", args: [agreementId] })),
+    retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_ratifications", args: [agreementId] })),
+    retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_verdict", args: [agreementId] })),
+    retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_party_addresses", args: [agreementId] })),
+    retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_formation_receipt", args: [agreementId] })),
   ]);
   const [partyA, partyB] = typeof ratifications === "string" ? ratifications.split(":", 2) : ["", ""];
   const [partyAAddress, partyBAddress] = typeof partyAddresses === "string" ? partyAddresses.split(":", 2) : ["", ""];
@@ -244,15 +295,21 @@ export async function submitConsensus(
 ): Promise<ConsensusReceipt> {
   const { client } = await connectStudioDev(provider, knownAccount);
   const write = { address: contractAddress, functionName: "evaluate", args: [input.agreementId, input.inputHash, input.buyerInterpretation, input.sellerInterpretation, input.question] };
-  const estimate = await client.estimateTransactionFeesForWrite(write);
-  const transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
+  const estimate = await retryStudioBusy(() => client.estimateTransactionFeesForWrite(write));
+  let transactionHash: `0x${string}`;
+  try {
+    transactionHash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }) as `0x${string}`;
+  } catch (error) {
+    if (isStudioBusy(error)) throw new Error("Studio-dev is temporarily busy before the write could be confirmed. No automatic retry was sent; verify the on-chain state, then try again.");
+    throw error;
+  }
   const receipt = await waitForStudioFinalization(client, transactionHash);
   if (!isSuccessful(receipt)) throw new Error(`GenLayer write failed: ${receipt.statusName} / ${receipt.txExecutionResultName}`);
-  const outcome = await client.readContract({
+  const outcome = await retryStudioBusy(() => client.readContract({
     address: contractAddress,
     functionName: "get_outcome",
     args: [input.agreementId, input.inputHash],
-  });
+  }));
   if (!isSemanticOutcome(outcome)) throw new Error("GenLayer returned an invalid semantic outcome");
   return { transactionHash, outcome, finalized: true, executionSucceeded: true };
 }
