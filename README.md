@@ -8,7 +8,7 @@ CLAUSUM is a semantic formation layer for autonomous agreements. It establishes 
 
 - Two independently authored Party A / Party B representations, committed by their authorized wallets.
 - Deterministic comparison for quantities, evidence, and deadlines.
-- A GenLayer Intelligent Contract that submits disputed semantic questions to validator consensus and now contains a contract-authoritative formation state-machine candidate.
+- A GenLayer Intelligent Contract that submits disputed semantic questions to validator consensus and provides the current contract-authoritative formation state machine.
 - Canonical deterministic serialization and SHA-256 hashing.
 - Hash-bound two-party ratification and a Formation Receipt.
 - Reown injected-wallet flow into the Studio-dev transaction adapter; browser storage is convenience state only.
@@ -28,12 +28,12 @@ The `@x402/*` packages are present to satisfy transitive Reown/Coinbase wallet d
 - Network: `studio-dev`
 - Chain ID: `61997`
 - RPC: `https://studio-dev.genlayer.com/api`
-- Active contract-authoritative deployment: `0xcEec0403675761E938c16995Df6f835A701D44ec`
+- Current submitted contract-authoritative deployment: `0xcEec0403675761E938c16995Df6f835A701D44ec`
 - Historical legacy oracle: `0x2a30A638456fc607D306c9617963898CdAae8BC6` (**HISTORICAL**)
 
 ### Verified Studio Next evidence
 
-The final hardened instance was deployed and finalized on Studio Next (Studio-dev). Its deployment transaction is
+The current submitted Studio-dev deployment was deployed and finalized on Studio Next. Its deployment transaction is
 [`0x1baee97d…1a5e5`](https://explorer-studio-dev.genlayer.com/tx/0x1baee97d1bd4d6e15ba2509be58cda8429decd1afea7f5447283f6c90de1a5e5).
 The deployed address is [`0xcEec0403675761E938c16995Df6f835A701D44ec`](https://explorer-studio-dev.genlayer.com/address/0xcEec0403675761E938c16995Df6f835A701D44ec).
 
@@ -65,7 +65,7 @@ separates that evidence from local receipt matching. Transaction and contract ex
 evidence. Reown AppKit's wallet selection modal has been verified in production; a signed transaction through the
 production app has not been independently verified because no connected wallet session was available.
 
-The domain suite passes **26/26** tests. It covers canonicalization, conflict and formation rules, receipt
+The domain suite passes **32/32** tests. It covers canonicalization, conflict and formation rules, receipt
 consistency, hash readiness and stale-result protection, Studio-dev wallet chain gating, cryptographically
 generated agreement IDs across fresh/reset/new-draft flows, amendment identity preservation, duplicate-name
 Party A/B ratification, and the structured procurement demo's quantity and two initial conflicts.

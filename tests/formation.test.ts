@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isAuthorizedAgreementWallet, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, matchesFormationReceiptQuery, stableStringify, versionCommitmentHash, versionCommitmentPayload } from "../lib/formation";
+import { activeWalletFromAccountsChanged, canEvaluateCurrentInput, canForm, canonicalHash, consensusStatusText, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isAuthorizedAgreementWallet, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, matchesFormationReceiptQuery, stableStringify, versionCommitmentHash, versionCommitmentPayload } from "../lib/formation";
 import { amendFormationState, clearRuntime, configureDraftState, createAgreementId, initialState, ratifyFormationState, resetFormationState } from "../lib/formation-context";
 import { demoScenarios, deriveConservativeObligations } from "../lib/demo-scenarios";
 import { connectStudioDev, isSemanticOutcome, isStudioDevChain, parseChainId, parseFormationContractReceipt, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
@@ -241,6 +241,36 @@ test("amendment preserves the agreement ID while new draft creates one", () => {
   const draft = configureDraftState(first, { title: "New", partyAName: "A", partyBName: "B", partyBAddress: "", obligations: base });
   assert.notEqual(draft.agreementId, first.agreementId);
   assert.equal(draft.semanticVersion, first.semanticVersion + 1);
+});
+
+test("amendment preserves fresh authoritative identities but clears obsolete proof", () => {
+  const partyA = "0x1111111111111111111111111111111111111111";
+  const partyB = "0x2222222222222222222222222222222222222222";
+  const previous = { ...initialState(), chainCreated: true, chainVersions: { a: true, b: true }, outcome: "EQUIVALENT" as const, status: "finalized" as const, verdictHash: "old", tx: "0xtx", ratifications: { a: "old", b: "old" }, receipt: createFormationReceipt({ agreementId: "AG-TEST", canonicalAgreementHash: "old", evaluationInputHash: "old", verdict: "EQUIVALENT", transactionHash: "0xtx", contractAddress: "0xcontract", network: "Studio-dev", partyARatifiedHash: "old", partyBRatifiedHash: "old", policyVersion: "0.1", formedAt: "2026-01-01T00:00:00.000Z" }) };
+  const freshRead = { state: "DRAFT", verdict: "NOT_EVALUATED", canonicalHash: "", partyARatifiedHash: "", partyBRatifiedHash: "", partyAAddress: partyA, partyBAddress: partyB, receipt: "", readAt: "2026-01-02T00:00:00.000Z" };
+  const amended = amendFormationState(previous, freshRead);
+  assert.equal(amended.agreementId, previous.agreementId);
+  assert.equal(amended.chainCreated, true);
+  assert.deepEqual(amended.chainVersions, { a: false, b: false });
+  assert.equal(amended.verdictHash, "");
+  assert.equal(amended.tx, "");
+  assert.deepEqual(amended.ratifications, { a: "", b: "" });
+  assert.equal(amended.receipt, null);
+  assert.equal(amended.authoritativeRead?.partyAAddress, partyA);
+  assert.equal(isAuthorizedAgreementWallet(partyA, amended.authoritativeRead?.partyAAddress ?? "", ""), true);
+  assert.equal(isAuthorizedAgreementWallet("0x3333333333333333333333333333333333333333", amended.authoritativeRead?.partyAAddress ?? "", ""), false);
+});
+
+test("wallet account changes replace the active account and disconnect when empty", () => {
+  const partyA = "0x1111111111111111111111111111111111111111";
+  assert.equal(activeWalletFromAccountsChanged([partyA]), partyA);
+  assert.equal(activeWalletFromAccountsChanged([]), null);
+  assert.equal(activeWalletFromAccountsChanged(["not-an-address"]), null);
+});
+
+test("finalized unresolved verdict is distinct from an unevaluated interpretation", () => {
+  assert.equal(consensusStatusText("UNRESOLVED", "finalized"), "Meaning remains unresolved");
+  assert.equal(consensusStatusText("UNRESOLVED", "idle"), "Meaning has not been evaluated");
 });
 
 test("duplicate display names still ratify independent party slots", () => {

@@ -128,6 +128,19 @@ export function matchesFormationReceiptQuery(receipt: FormationReceipt | null, q
     || normalizedQuery === receipt.transactionHash;
 }
 
+/** Returns the currently selected EIP-1193 account, or null after a disconnect/invalid event. */
+export function activeWalletFromAccountsChanged(raw: unknown): string | null {
+  const candidate = Array.isArray(raw) ? raw[0] : null;
+  return typeof candidate === "string" && /^0x[a-fA-F0-9]{40}$/.test(candidate) ? candidate : null;
+}
+
+/** Keeps a finalized UNRESOLVED judgment distinct from an evaluation that was never submitted. */
+export function consensusStatusText(outcome: SemanticOutcome, status: string): string {
+  if (outcome === "EQUIVALENT") return "Shared meaning established";
+  if (outcome === "MATERIAL_CONFLICT") return "Material conflict remains";
+  return status === "finalized" ? "Meaning remains unresolved" : "Meaning has not been evaluated";
+}
+
 /** UI-only guard: prevents an avoidable signing prompt from an unrelated wallet. */
 export function isAuthorizedAgreementWallet(wallet: string | null, partyAAddress: string, partyBAddress: string): boolean {
   if (!wallet) return false;

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { ArrowRight, LoaderCircle, RefreshCw } from "lucide-react";
 import { useFormation } from "../../lib/formation-context";
+import { consensusStatusText } from "../../lib/formation";
 import { ConvergenceRail } from "../../components/semantic/ConvergenceRail";
 import { HashDisplay, ProtocolBadge } from "../../components/ui/ProtocolPrimitives";
 
 export default function ConsensusPage() {
   const { outcome, status, evaluationHash, evaluationHashStatus, verdictHash, tx, conflicts, evaluate, switchNetwork, evaluationReady, evaluationFinalized, stage, amend, agreementId, wallet, walletReady, walletChainId, notice, contractMode, chainVersions, submitVersion } = useFormation();
   const submitting = status === "submitting";
-  const statusText = submitting ? "Awaiting consensus" : outcome === "EQUIVALENT" ? "Shared meaning established" : outcome === "MATERIAL_CONFLICT" ? "Material conflict remains" : "Meaning has not been evaluated";
+  const statusText = submitting ? "Awaiting consensus" : consensusStatusText(outcome, status);
   const evaluateLabel = submitting ? "Submitting…" : evaluationFinalized ? "Revision evaluated" : evaluationHashStatus === "calculating" ? "Calculating hash…" : !wallet ? "Connect wallet to evaluate" : walletChainId !== null && !walletReady ? "Switch to Studio-dev" : "Evaluate meaning";
   const wrongNetwork = Boolean(wallet) && walletChainId !== null && !walletReady;
   const actionDisabled = submitting || evaluationHashStatus === "calculating" || (!wrongNetwork && !evaluationReady);

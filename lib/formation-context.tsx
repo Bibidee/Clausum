@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import {
   canForm,
   canEvaluateCurrentInput,
+  activeWalletFromAccountsChanged,
   canonicalHash,
   contractCanonicalHash,
   contractEvaluationInputHash,
@@ -201,9 +202,14 @@ export function configureDraftState(previous: FormationState, draft: { title: st
   };
 }
 
-export function amendFormationState(previous: FormationState): FormationState {
+export function amendFormationState(
+  previous: FormationState,
+  authoritativeRead: FormationState["authoritativeRead"] = null,
+): FormationState {
   return {
     ...clearRuntime(previous, previous.semanticVersion + 1),
+    // An amendment clears prior proof but retains the just-read onchain identities.
+    authoritativeRead,
     chainRevision: previous.chainRevision + 1,
     chainVersions: { a: false, b: false },
     partyBObligations: previous.obligations,
@@ -427,7 +433,8 @@ export function FormationProvider({ children }: { children: ReactNode }) {
       }
       try {
         await reviseNegotiation(provider, CONTRACT as `0x${string}`, state.agreementId, state.wallet);
-        setState(amendFormationState);
+        const read = await readFormationState(provider, CONTRACT as `0x${string}`, state.agreementId, state.wallet);
+        setState(previous => amendFormationState(previous, { ...read, readAt: new Date().toISOString() }));
       } catch (error) { setState(previous => ({ ...previous, notice: describeWalletError(error) })); }
       return;
     }
@@ -454,7 +461,12 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     }
     if (provider.on && !walletListenersRef.current) {
       const chain = (raw: unknown) => { const chainId = typeof raw === "string" ? Number.parseInt(raw, 16) : null; setState(previous => ({ ...previous, walletChainId: Number.isFinite(chainId) ? chainId : null, walletReady: isStudioDevChain(Number.isFinite(chainId) ? chainId : null) })); };
-      const accounts = (raw: unknown) => { const next = Array.isArray(raw) ? raw[0] : null; if (typeof next !== "string") setState(previous => ({ ...previous, wallet: null, walletReady: false, walletChainId: null, notice: "Wallet disconnected." })); };
+      const accounts = (raw: unknown) => {
+        const next = activeWalletFromAccountsChanged(raw);
+        setState(previous => next
+          ? { ...previous, wallet: next, notice: "Active wallet account changed." }
+          : { ...previous, wallet: null, walletReady: false, walletChainId: null, notice: "Wallet disconnected." });
+      };
       provider.on("chainChanged", chain); provider.on("accountsChanged", accounts); walletListenersRef.current = { provider, chain, accounts };
     }
     setState(previous => ({
