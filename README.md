@@ -41,8 +41,8 @@ Fresh signed lifecycle evidence (`AG-LIVE-934844`) is recorded in [artifacts/liv
 
 Live contract evidence for agreement `clausum-live-conflict-20260915`:
 
-- `MATERIAL_CONFLICT`: derived input hash `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b`, finalized transaction [`0x4724a730…d1efd`](https://explorer-studio-dev.genlayer.com/tx/0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd); `get_outcome` read returned `MATERIAL_CONFLICT`.
-- `EQUIVALENT`: derived input hash `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821`, finalized transaction [`0xc8011ec0…15768`](https://explorer-studio-dev.genlayer.com/tx/0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768); `get_outcome` read returned `EQUIVALENT`.
+- `MATERIAL_CONFLICT`: derived input hash `a74390e94ae5f34e85339ee5819c6e3fcfea9a867802984440dca05cb0dbf13b`, finalized transaction [`0x4724a730…d1efd`](https://explorer-studio-dev.genlayer.com/tx/0x4724a7302deeefca843cb53c32db185a1315ece0067be30f513301b1aebd1efd); the current formation flow reads `get_verdict` and separately reads the lifecycle state.
+- `EQUIVALENT`: derived input hash `4378c403c953c3c8e453e440904596e28b62be6457f7303de51de21ae9393821`, finalized transaction [`0xc8011ec0…15768`](https://explorer-studio-dev.genlayer.com/tx/0xc8011ec0e898de8c7deb26fb8755818cefc0a1676e128b20e7fae37836215768); the current formation flow reads `get_verdict` and separately reads the lifecycle state.
 
 ## Formation invariant and current deployment status
 
@@ -107,10 +107,12 @@ Never place private keys, seed phrases, or wallet secrets in any environment fil
 
 1. Show the shared natural-language agreement.
 2. Compare the guided demo interpretations and surface deterministic conflicts.
-3. Connect a Studio-dev wallet and submit the semantic question through the deployed contract.
-4. Resolve the conflicting obligations and re-analyze.
-5. Compile one canonical Agreement Object.
-6. Ratify it as both parties and verify the Formation Receipt.
+3. Connect Party A's Studio-dev wallet, create the negotiation, and commit Party A's version.
+4. Connect Party B's registered wallet and commit Party B's version.
+5. Evaluate the current revision. A disagreement yields `MATERIAL_CONFLICT` / `BLOCKED`.
+6. Amend the same agreement, commit both revision-2 versions, then evaluate again.
+7. Once the verdict is `EQUIVALENT` / `READY`, ratify as Party A and then Party B to form the agreement.
+8. View the Formation Receipt and use `/verify` for a local receipt match plus fresh contract readback.
 
 See [DEMO.md](DEMO.md) for the judge-facing script.
 

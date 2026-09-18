@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, stableStringify, versionCommitmentHash, versionCommitmentPayload } from "../lib/formation";
+import { canEvaluateCurrentInput, canForm, canonicalHash, createFormationReceipt, deterministicConflicts, evaluationHashPayload, evaluationInputHash, isAuthorizedAgreementWallet, isEvaluationFinalized, isEvaluationHashBound, isEvaluationRequestCurrent, isFormationReceiptConsistent, matchesFormationReceiptQuery, stableStringify, versionCommitmentHash, versionCommitmentPayload } from "../lib/formation";
 import { amendFormationState, clearRuntime, configureDraftState, createAgreementId, initialState, ratifyFormationState, resetFormationState } from "../lib/formation-context";
 import { demoScenarios, deriveConservativeObligations } from "../lib/demo-scenarios";
-import { connectStudioDev, isStudioDevChain, parseChainId, parseFormationContractReceipt, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
+import { connectStudioDev, isSemanticOutcome, isStudioDevChain, parseChainId, parseFormationContractReceipt, readProviderChainId, STUDIO_DEV_CHAIN_ID_HEX, switchToStudioDev } from "../lib/genlayer";
 
 const base = { scope: "EU providers by revenue", evidence: "two sources", deadline: "Friday 17:00 CET", quantity: 5 };
 test("network helper verifies an already-correct chain", async () => {
@@ -57,6 +57,32 @@ test("formation requires equivalence, no deterministic conflicts, and matching r
   assert.equal(canForm("EQUIVALENT", ["deadline"], "a", "a"), false);
   assert.equal(canForm("EQUIVALENT", [], "a", "b"), false);
   assert.equal(canForm("EQUIVALENT", [], "a", "a"), true);
+});
+
+test("frontend preserves only exact contract verdicts", () => {
+  assert.equal(isSemanticOutcome("EQUIVALENT"), true);
+  assert.equal(isSemanticOutcome("MATERIAL_CONFLICT"), true);
+  assert.equal(isSemanticOutcome("UNRESOLVED"), true);
+  assert.equal(isSemanticOutcome("BLOCKED"), false);
+  assert.equal(isSemanticOutcome("READY"), false);
+});
+
+test("receipt verification rejects blank values and accepts only exact receipt identifiers", () => {
+  const receipt = createFormationReceipt({ agreementId: "AG-VERIFY-1", canonicalAgreementHash: "canonical", evaluationInputHash: "evaluation", verdict: "EQUIVALENT", transactionHash: "0xtx", contractAddress: "0xcontract", network: "Studio-dev", partyARatifiedHash: "canonical", partyBRatifiedHash: "canonical", policyVersion: "0.1", formedAt: "2026-01-01T00:00:00.000Z" });
+  assert.equal(matchesFormationReceiptQuery(receipt, ""), false);
+  assert.equal(matchesFormationReceiptQuery(receipt, "   "), false);
+  assert.equal(matchesFormationReceiptQuery(receipt, "AG-VERIFY-1"), true);
+  assert.equal(matchesFormationReceiptQuery(receipt, "canonical"), true);
+  assert.equal(matchesFormationReceiptQuery(receipt, "0xtx"), true);
+  assert.equal(matchesFormationReceiptQuery(receipt, "incorrect"), false);
+});
+
+test("frontend wallet role guard excludes unrelated wallets", () => {
+  const partyA = "0x1111111111111111111111111111111111111111";
+  const partyB = "0x2222222222222222222222222222222222222222";
+  assert.equal(isAuthorizedAgreementWallet(partyA, partyA, partyB), true);
+  assert.equal(isAuthorizedAgreementWallet(partyB.toUpperCase(), partyA, partyB), true);
+  assert.equal(isAuthorizedAgreementWallet("0x3333333333333333333333333333333333333333", partyA, partyB), false);
 });
 
 test("a stale verdict and changed canonical agreement cannot form", async () => {
@@ -211,6 +237,7 @@ test("amendment preserves the agreement ID while new draft creates one", () => {
   const amended = amendFormationState(first);
   assert.equal(amended.agreementId, first.agreementId);
   assert.equal(amended.semanticVersion, first.semanticVersion + 1);
+  assert.deepEqual(amended.chainVersions, { a: false, b: false });
   const draft = configureDraftState(first, { title: "New", partyAName: "A", partyBName: "B", partyBAddress: "", obligations: base });
   assert.notEqual(draft.agreementId, first.agreementId);
   assert.equal(draft.semanticVersion, first.semanticVersion + 1);

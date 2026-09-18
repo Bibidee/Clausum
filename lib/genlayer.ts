@@ -77,7 +77,7 @@ export interface ConsensusReceipt {
   executionSucceeded: boolean;
 }
 
-function isSemanticOutcome(value: unknown): value is SemanticOutcome {
+export function isSemanticOutcome(value: unknown): value is SemanticOutcome {
   return value === "EQUIVALENT" || value === "MATERIAL_CONFLICT" || value === "UNRESOLVED";
 }
 
@@ -257,9 +257,9 @@ export async function submitPartyVersionFromTerms(provider: Eip1193Provider, con
 export async function evaluateNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, revision: string, knownAccount?: string): Promise<ConsensusReceipt> {
   const { client } = await connectStudioDev(provider, knownAccount);
   const receipt = await writeAndFinalize(client, contractAddress, "evaluate_negotiation", [agreementId, revision]);
-  const outcome = await retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_formation_state", args: [agreementId] }));
-  const mapped = outcome === "READY" ? "EQUIVALENT" : outcome === "BLOCKED" ? "MATERIAL_CONFLICT" : "UNRESOLVED";
-  return { transactionHash: receipt.transactionHash, outcome: mapped, finalized: true, executionSucceeded: true };
+  const verdict = await retryStudioBusy(() => client.readContract({ address: contractAddress, functionName: "get_verdict", args: [agreementId] }));
+  if (!isSemanticOutcome(verdict)) throw new Error(`Contract returned an invalid semantic verdict: ${String(verdict)}.`);
+  return { transactionHash: receipt.transactionHash, outcome: verdict, finalized: true, executionSucceeded: true };
 }
 
 export async function ratifyNegotiation(provider: Eip1193Provider, contractAddress: `0x${string}`, agreementId: string, canonicalHash: string, knownAccount?: string): Promise<FormationWriteReceipt> {

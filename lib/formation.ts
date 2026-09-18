@@ -120,6 +120,21 @@ export function isFormationReceiptConsistent(receipt: FormationReceipt | null, e
     && Boolean(receipt.formedAt);
 }
 
+export function matchesFormationReceiptQuery(receipt: FormationReceipt | null, query: string): boolean {
+  const normalizedQuery = query.trim();
+  if (!receipt || normalizedQuery.length === 0) return false;
+  return normalizedQuery === receipt.agreementId
+    || normalizedQuery === receipt.canonicalAgreementHash
+    || normalizedQuery === receipt.transactionHash;
+}
+
+/** UI-only guard: prevents an avoidable signing prompt from an unrelated wallet. */
+export function isAuthorizedAgreementWallet(wallet: string | null, partyAAddress: string, partyBAddress: string): boolean {
+  if (!wallet) return false;
+  const normalizedWallet = wallet.toLowerCase();
+  return [partyAAddress, partyBAddress].filter(Boolean).some(address => normalizedWallet === address.toLowerCase());
+}
+
 export function isEvaluationFinalized(input: {
   status: string;
   evaluationHash: string;

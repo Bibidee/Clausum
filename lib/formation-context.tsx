@@ -13,6 +13,7 @@ import {
   isFormationReceiptConsistent,
   isEvaluationFinalized,
   isEvaluationRequestCurrent,
+  isAuthorizedAgreementWallet,
   stableStringify,
   versionCommitmentHash,
   type FormationReceipt,
@@ -517,13 +518,16 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     if (!CONTRACT_MODE) { setState(previous => ({ ...previous, notice: "Contract submission is available when CLAUSUM is configured in contract mode." })); return; }
     const provider = walletProviderRef.current;
     if (!provider || !state.wallet || !state.walletReady) { setState(previous => ({ ...previous, notice: "Connect the authorized Studio-dev wallet before submitting a version." })); return; }
+    if (state.chainVersions[party]) { setState(previous => ({ ...previous, notice: `Party ${party.toUpperCase()} has already committed this revision. Apply an amendment to submit a new revision.` })); return; }
     if (party === "b" && state.wallet.toLowerCase() !== state.partyBAddress.toLowerCase()) { setState(previous => ({ ...previous, notice: "Connect Party B's authorized wallet to submit Party B's version." })); return; }
-    if (party === "a" && state.wallet.toLowerCase() === state.partyBAddress.toLowerCase()) { setState(previous => ({ ...previous, notice: "Party A must submit from the Party A wallet." })); return; }
+    if (party === "a" && state.chainCreated && !isAuthorizedAgreementWallet(state.wallet, state.authoritativeRead?.partyAAddress ?? "", "")) { setState(previous => ({ ...previous, notice: "Connect Party A's authorized wallet to submit Party A's version." })); return; }
+    if (party === "a" && !state.chainCreated && state.wallet.toLowerCase() === state.partyBAddress.toLowerCase()) { setState(previous => ({ ...previous, notice: "Party A must submit from the Party A wallet." })); return; }
     try {
       if (party === "a" && !state.chainCreated) {
         if (!/^0x[a-fA-F0-9]{40}$/.test(state.partyBAddress)) throw new Error("Enter Party B's wallet address before creating the negotiation.");
         await createNegotiation(provider, CONTRACT as `0x${string}`, state.agreementId, state.partyBAddress as `0x${string}`, model.policyVersion, state.wallet);
-        setState(previous => ({ ...previous, chainCreated: true }));
+        const read = await readFormationState(provider, CONTRACT as `0x${string}`, state.agreementId, state.wallet);
+        setState(previous => ({ ...previous, chainCreated: true, authoritativeRead: { ...read, readAt: new Date().toISOString() } }));
       }
       if (!state.chainCreated && party === "b") { setState(previous => ({ ...previous, notice: "Party A must create the negotiation before Party B can submit." })); return; }
       const obligations = party === "a" ? partyAObligations : partyBObligations;
@@ -562,6 +566,10 @@ export function FormationProvider({ children }: { children: ReactNode }) {
     }
     if (!state.walletReady || state.walletChainId !== studioDevConfig.chainId) {
       setState(previous => ({ ...previous, notice: `Wrong wallet network. Switch to Studio-dev · ${studioDevConfig.chainId} before evaluating.` }));
+      return;
+    }
+    if (CONTRACT_MODE && !isAuthorizedAgreementWallet(state.wallet, state.authoritativeRead?.partyAAddress ?? "", state.partyBAddress)) {
+      setState(previous => ({ ...previous, notice: "Connect Party A's or Party B's authorized wallet before evaluating meaning." }));
       return;
     }
     if (CONTRACT_MODE && (!state.chainCreated || !state.chainVersions.a || !state.chainVersions.b)) {

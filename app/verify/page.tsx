@@ -3,7 +3,7 @@
 import { CheckCircle2, Database, Search, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { useFormation } from "../../lib/formation-context";
-import { isFormationReceiptConsistent } from "../../lib/formation";
+import { isFormationReceiptConsistent, matchesFormationReceiptQuery } from "../../lib/formation";
 import { ExplorerLink, HashDisplay, ProtocolBadge } from "../../components/ui/ProtocolPrimitives";
 
 export default function VerifyPage() {
@@ -21,6 +21,7 @@ export default function VerifyPage() {
   } = useFormation();
   const [query, setQuery] = useState("");
   const [checked, setChecked] = useState(false);
+  const normalizedQuery = query.trim();
   const receiptConsistent = isFormationReceiptConsistent(receipt, {
     agreementId,
     canonicalHash,
@@ -31,7 +32,7 @@ export default function VerifyPage() {
     network: "Studio-dev",
     policyVersion: model.policyVersion,
   });
-  const valid = receiptConsistent && (!query || query === receipt.agreementId || query === receipt.canonicalAgreementHash || query === receipt.transactionHash);
+  const valid = receiptConsistent && normalizedQuery.length > 0 && matchesFormationReceiptQuery(receipt, normalizedQuery);
   return (
     <div className="page">
       <div className="page-heading centered">
